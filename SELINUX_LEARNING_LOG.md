@@ -28,7 +28,7 @@
 ## Progress Overview
 
 ```
-Phase 0  — Linux Foundations          5 modules   [ 2 / 5  done ]
+Phase 0  — Linux Foundations          5 modules   [ 3 / 5  done ]
 Phase 1  — SELinux Concepts           7 modules   [ 0 / 7  done ]
 Phase 2  — CIL Language               6 modules   [ 0 / 6  done ]
 Phase 3  — User, Role, Type, Level    6 modules   [ 0 / 6  done ]
@@ -41,7 +41,7 @@ Phase 9  — Automotive / ARMv8 / Xen  10 modules   [ 0 / 10 done ]
 Phase 10 — Advanced Topics            5 modules   [ 0 / 5  done ]
 Phase 11 — Debug, Analysis, Forensics 7 modules   [ 0 / 7  done ]
 ──────────────────────────────────────────────────────────────────
-Total                                73 modules   [ 2 / 73 done ]
+Total                                73 modules   [ 3 / 73 done ]
 ```
 
 ---
@@ -57,7 +57,7 @@ Total                                73 modules   [ 2 / 73 done ]
   - Directory tree (`/`), 7 file types, `/proc`, `/sys`, `/dev`, inodes, xattrs, `security.selinux`, squashfs, mounting, `unlabeled_t`, genfscon
   - Key analogy: sealed vacuum-packed box = squashfs (read-only, cannot modify)
 
-- [ ] **0.3** — Users, Groups & DAC Permissions
+- [x] **0.3** — Users, Groups & DAC Permissions
   - UIDs, GIDs, `root`, `rwxr-xr-x`, `chmod`, `chown`, setuid/setgid bits, why DAC alone fails on ECUs
 
 - [ ] **0.4** — Processes & Privileges
@@ -356,4 +356,13 @@ Total                                73 modules   [ 2 / 73 done ]
 ---
 
 *Add new session notes below this line:*
+
+### Session 2 (Resumed)
+- Output format changed to **HTML** (`learning/<phase>-<module>-<short-name>.html`)
+- `CLAUDE.md` created with all persistent teaching instructions
+- `learning/0-1-how-linux-works.html` created (Phase 0.1 HTML)
+- `learning/0-2-linux-filesystem.html` created (Phase 0.2 HTML)
+- `learning/0-3-users-groups-dac.html` created (Phase 0.3 HTML)
+- Phase 0.3 taught: UIDs/GIDs, permission bits, DAC check flowchart, setuid, UID inheritance, attack scenario (setuid exploit → root → DAC bypass → SELinux blocks)
+- Key themes: DAC vs MAC, root does not bypass SELinux, ECU hardening checklist
 
