@@ -62,6 +62,64 @@ Each HTML file MUST be:
   element must fit inside its bounding box. Use individual `<text>` elements with
   explicit x/y coordinates rather than relying on `letter-spacing` (which does not
   align with surrounding rectangles).
+- **Mobile-responsive** — every HTML file MUST work on both desktop and iOS/Android phones.
+  Use the standard responsive layout block below. On screens ≤ 768px the sidebar collapses
+  off-screen and slides in when the hamburger button is tapped. SVG containers must have
+  `overflow-x: auto` on mobile so wide diagrams scroll horizontally rather than clipping.
+
+  Required CSS (add before `</style>`):
+  ```css
+  .topbar { display: none; align-items: center; gap: .75rem; padding: .75rem 1rem; background: var(--bg-soft); border-bottom: 1px solid var(--border); position: sticky; top: 0; z-index: 100; }
+  .topbar-title { font-size: .9rem; font-weight: 600; color: var(--text); margin: 0; flex: 1; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .hamburger { background: none; border: 1px solid var(--border); border-radius: 6px; padding: .4rem .6rem; cursor: pointer; color: var(--text); font-size: 1.1rem; line-height: 1; }
+  .sidebar-overlay { display: none; position: fixed; inset: 0; background: rgba(0,0,0,.45); z-index: 199; }
+  .sidebar-overlay.show { display: block; }
+  .sidebar-close { display: none; background: none; border: none; font-size: 1.3rem; cursor: pointer; color: var(--text-muted); padding: 0; margin-left: auto; }
+  @media (max-width: 768px) {
+    .layout { grid-template-columns: 1fr; }
+    .topbar { display: flex; }
+    .sidebar { position: fixed; left: 0; top: 0; height: 100vh; width: 280px; transform: translateX(-100%); transition: transform .25s ease; z-index: 200; box-shadow: 4px 0 24px rgba(0,0,0,.15); }
+    .sidebar.open { transform: translateX(0); }
+    .sidebar-close { display: block; }
+    .main { padding: 1.25rem 1rem; }
+    .svg-wrap { overflow-x: auto; -webkit-overflow-scrolling: touch; }
+    .summary-grid { grid-template-columns: 1fr !important; }
+    .tab-bar { flex-wrap: wrap; }
+    pre, code { overflow-x: auto; -webkit-overflow-scrolling: touch; }
+    .nav-footer { flex-direction: column; align-items: stretch; text-align: center; }
+    h1 { font-size: 1.6rem; }
+  }
+  ```
+
+  Required HTML (replace `<body>\n<div class="layout">\n<nav class="sidebar">` with):
+  ```html
+  <body>
+  <div class="topbar">
+    <button class="hamburger" onclick="openSidebar()" aria-label="Open navigation">&#9776;</button>
+    <span class="topbar-title">X.Y Module Title Here</span>
+  </div>
+  <div class="sidebar-overlay" onclick="closeSidebar()"></div>
+  <div class="layout">
+  <nav class="sidebar">
+    <div style="display:flex;align-items:center;margin-bottom:1rem">
+      <strong style="font-size:.85rem;color:var(--text-muted)">Navigation</strong>
+      <button class="sidebar-close" onclick="closeSidebar()" aria-label="Close navigation">&#10005;</button>
+    </div>
+  ```
+
+  Required JS (add to `<script>` block before `</script>`):
+  ```javascript
+  function openSidebar() {
+    document.querySelector('.sidebar').classList.add('open');
+    document.querySelector('.sidebar-overlay').classList.add('show');
+    document.body.style.overflow = 'hidden';
+  }
+  function closeSidebar() {
+    document.querySelector('.sidebar').classList.remove('open');
+    document.querySelector('.sidebar-overlay').classList.remove('show');
+    document.body.style.overflow = '';
+  }
+  ```
 
 ### After writing each HTML file
 

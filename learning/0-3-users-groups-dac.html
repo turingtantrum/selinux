@@ -101,6 +101,27 @@
   .nav-btn:hover { background: var(--blue-soft); border-color: var(--blue-border); color: var(--blue); text-decoration: none; }
   .nav-btn.disabled { opacity: .4; pointer-events: none; }
   .nav-meta { color: var(--text-muted); font-size: .85rem; }
+  /* ── Mobile ── */
+  .topbar { display: none; align-items: center; gap: .75rem; padding: .75rem 1rem; background: var(--bg-soft); border-bottom: 1px solid var(--border); position: sticky; top: 0; z-index: 100; }
+  .topbar-title { font-size: .9rem; font-weight: 600; color: var(--text); margin: 0; flex: 1; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .hamburger { background: none; border: 1px solid var(--border); border-radius: 6px; padding: .4rem .6rem; cursor: pointer; color: var(--text); font-size: 1.1rem; line-height: 1; }
+  .sidebar-overlay { display: none; position: fixed; inset: 0; background: rgba(0,0,0,.45); z-index: 199; }
+  .sidebar-overlay.show { display: block; }
+  .sidebar-close { display: none; background: none; border: none; font-size: 1.3rem; cursor: pointer; color: var(--text-muted); padding: 0; margin-left: auto; }
+  @media (max-width: 768px) {
+    .layout { grid-template-columns: 1fr; }
+    .topbar { display: flex; }
+    .sidebar { position: fixed; left: 0; top: 0; height: 100vh; width: 280px; transform: translateX(-100%); transition: transform .25s ease; z-index: 200; box-shadow: 4px 0 24px rgba(0,0,0,.15); }
+    .sidebar.open { transform: translateX(0); }
+    .sidebar-close { display: block; }
+    .main { padding: 1.25rem 1rem; }
+    .svg-wrap { overflow-x: auto; -webkit-overflow-scrolling: touch; }
+    .summary-grid { grid-template-columns: 1fr !important; }
+    .tab-bar { flex-wrap: wrap; }
+    pre, code { overflow-x: auto; -webkit-overflow-scrolling: touch; }
+    .nav-footer { flex-direction: column; align-items: stretch; text-align: center; }
+    h1 { font-size: 1.6rem; }
+  }
 
   .svg-wrap { background: var(--card); border: 1px solid var(--border); border-radius: 10px; padding: 1.5rem; margin: 1.25rem 0; overflow-x: auto; }
   .svg-wrap svg { display: block; max-width: 100%; height: auto; }
@@ -108,9 +129,18 @@
 </style>
 </head>
 <body>
+<div class="topbar">
+  <button class="hamburger" onclick="openSidebar()" aria-label="Open navigation">&#9776;</button>
+  <span class="topbar-title">0.3 Users, Groups &amp; DAC</span>
+</div>
+<div class="sidebar-overlay" onclick="closeSidebar()"></div>
 <div class="layout">
 
 <nav class="sidebar">
+  <div style="display:flex;align-items:center;margin-bottom:1rem">
+    <strong style="font-size:.85rem;color:var(--text-muted)">Navigation</strong>
+    <button class="sidebar-close" onclick="closeSidebar()" aria-label="Close navigation">&#10005;</button>
+  </div>
   <h3>Phase 0 — Linux Foundations</h3>
   <ul>
     <li><a href="0-1-how-linux-works.html" class="done">0.1 How Linux Really Works</a></li>
@@ -666,6 +696,16 @@ function switchTab(ev, group, id) {
   document.querySelectorAll('#tabs-' + group + ' .tab-btn').forEach(b => b.classList.remove('active'));
   document.getElementById(group + '-' + id).classList.add('active');
   ev.currentTarget.classList.add('active');
+}
+function openSidebar() {
+  document.querySelector('.sidebar').classList.add('open');
+  document.querySelector('.sidebar-overlay').classList.add('show');
+  document.body.style.overflow = 'hidden';
+}
+function closeSidebar() {
+  document.querySelector('.sidebar').classList.remove('open');
+  document.querySelector('.sidebar-overlay').classList.remove('show');
+  document.body.style.overflow = '';
 }
 </script>
 </body>
