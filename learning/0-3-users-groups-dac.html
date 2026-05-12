@@ -6,225 +6,293 @@
 <title>0.3 — Users, Groups &amp; DAC Permissions | SELinux Learning</title>
 <style>
   :root {
-    --bg: #0d1117; --card: #161b22; --border: #30363d;
-    --blue: #58a6ff; --green: #3fb950; --orange: #d29922;
-    --red: #f85149; --purple: #bc8cff; --teal: #39d353;
-    --text: #e6edf3; --muted: #8b949e; --code-bg: #1f2937;
+    --bg: #ffffff;
+    --bg-soft: #f6f8fa;
+    --card: #ffffff;
+    --border: #d0d7de;
+    --border-soft: #eaeef2;
+    --text: #1f2328;
+    --text-muted: #656d76;
+    --blue: #0969da;
+    --blue-soft: #ddf4ff;
+    --blue-border: #54aeff;
+    --green: #1a7f37;
+    --green-soft: #dafbe1;
+    --green-border: #4ac26b;
+    --orange: #9a6700;
+    --orange-soft: #fff8c5;
+    --orange-border: #d4a72c;
+    --red: #cf222e;
+    --red-soft: #ffebe9;
+    --red-border: #ff8182;
+    --purple: #8250df;
+    --purple-soft: #fbefff;
+    --purple-border: #c297ff;
+    --code-bg: #f6f8fa;
   }
   * { box-sizing: border-box; margin: 0; padding: 0; }
   body { background: var(--bg); color: var(--text); font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; line-height: 1.7; }
   a { color: var(--blue); text-decoration: none; }
-  h1 { font-size: 2rem; color: var(--blue); margin-bottom: .25rem; }
-  h2 { font-size: 1.3rem; color: var(--blue); margin: 1.5rem 0 .75rem; border-left: 3px solid var(--blue); padding-left: .75rem; }
-  h3 { font-size: 1.05rem; color: var(--orange); margin: 1rem 0 .5rem; }
-  p { margin-bottom: .85rem; }
-  code { background: var(--code-bg); color: var(--green); padding: .15em .4em; border-radius: 4px; font-family: 'Fira Code', monospace; font-size: .9em; }
-  pre { background: var(--code-bg); border: 1px solid var(--border); border-radius: 8px; padding: 1.2rem; overflow-x: auto; margin: 1rem 0; }
-  pre code { background: none; padding: 0; font-size: .88rem; color: #e6edf3; }
-  .layout { display: grid; grid-template-columns: 240px 1fr; min-height: 100vh; }
-  .sidebar { background: var(--card); border-right: 1px solid var(--border); padding: 1.5rem 1rem; position: sticky; top: 0; height: 100vh; overflow-y: auto; }
-  .sidebar h3 { color: var(--muted); font-size: .75rem; text-transform: uppercase; letter-spacing: .08em; margin-bottom: .5rem; }
+  a:hover { text-decoration: underline; }
+  h1 { font-size: 2rem; color: var(--text); margin-bottom: .35rem; font-weight: 700; }
+  h2 { font-size: 1.3rem; color: var(--text); margin: 2rem 0 .85rem; padding-left: .85rem; border-left: 4px solid var(--blue); font-weight: 600; }
+  h3 { font-size: 1.05rem; color: var(--text); margin: 1.1rem 0 .55rem; font-weight: 600; }
+  p { margin-bottom: .9rem; color: var(--text); }
+  code { background: var(--code-bg); color: var(--text); padding: .15em .4em; border-radius: 4px; font-family: 'SF Mono', Monaco, 'Cascadia Code', monospace; font-size: .88em; border: 1px solid var(--border-soft); }
+  pre { background: var(--code-bg); border: 1px solid var(--border); border-radius: 8px; padding: 1.1rem 1.25rem; overflow-x: auto; margin: 1rem 0; }
+  pre code { background: none; padding: 0; font-size: .87rem; color: var(--text); border: none; }
+  .layout { display: grid; grid-template-columns: 260px 1fr; min-height: 100vh; }
+  .sidebar { background: var(--bg-soft); border-right: 1px solid var(--border); padding: 1.75rem 1rem; position: sticky; top: 0; height: 100vh; overflow-y: auto; }
+  .sidebar h3 { color: var(--text-muted); font-size: .72rem; text-transform: uppercase; letter-spacing: .08em; margin: 0 0 .6rem .5rem; font-weight: 600; }
   .sidebar ul { list-style: none; }
-  .sidebar li { margin-bottom: .2rem; }
-  .sidebar a { color: var(--muted); font-size: .88rem; display: block; padding: .3rem .5rem; border-radius: 4px; }
-  .sidebar a:hover { background: var(--border); color: var(--text); }
-  .sidebar a.active { background: #1c3a5e; color: var(--blue); font-weight: 600; }
-  .sidebar .done { color: var(--green); }
-  .sidebar .done::before { content: '✓ '; }
-  .main { padding: 2.5rem 3rem; max-width: 900px; }
-  .phase-badge { display: inline-block; background: #1c3a5e; color: var(--blue); padding: .3rem .8rem; border-radius: 20px; font-size: .8rem; font-weight: 600; margin-bottom: 1rem; }
-  .card { background: var(--card); border: 1px solid var(--border); border-radius: 10px; padding: 1.5rem; margin: 1.25rem 0; }
-  .card.green { border-color: #238636; }
-  .card.orange { border-color: #9e6a03; }
-  .card.red { border-color: #6e1a1a; }
-  .card.purple { border-color: #6e40c9; }
-  .analogy { background: #161b22; border: 1px solid #9e6a03; border-left: 4px solid var(--orange); border-radius: 8px; padding: 1.2rem 1.5rem; margin: 1.25rem 0; }
-  .analogy::before { content: '💡 Analogy '; font-weight: 700; color: var(--orange); display: block; margin-bottom: .5rem; font-size: .85rem; text-transform: uppercase; letter-spacing: .05em; }
-  .tabs { display: flex; gap: .5rem; margin-bottom: 0; flex-wrap: wrap; }
-  .tab-btn { background: var(--card); border: 1px solid var(--border); color: var(--muted); padding: .5rem 1.1rem; border-radius: 6px 6px 0 0; cursor: pointer; font-size: .9rem; transition: all .2s; }
-  .tab-btn.active { background: #1c3a5e; color: var(--blue); border-color: var(--blue); border-bottom-color: #1c3a5e; }
-  .tab-panel { display: none; background: var(--card); border: 1px solid var(--border); border-radius: 0 8px 8px 8px; padding: 1.5rem; }
+  .sidebar li { margin-bottom: .15rem; }
+  .sidebar a { color: var(--text); font-size: .87rem; display: block; padding: .42rem .6rem; border-radius: 6px; }
+  .sidebar a:hover { background: var(--border-soft); text-decoration: none; }
+  .sidebar a.active { background: var(--blue-soft); color: var(--blue); font-weight: 600; }
+  .sidebar a.done::before { content: '✓ '; color: var(--green); font-weight: 700; }
+  .sidebar a.pending { color: var(--text-muted); }
+  .main { padding: 2.5rem 3rem; max-width: 980px; }
+  .phase-badge { display: inline-block; background: var(--blue-soft); color: var(--blue); padding: .3rem .85rem; border-radius: 20px; font-size: .78rem; font-weight: 600; margin-bottom: 1rem; border: 1px solid var(--blue-border); }
+  .lead { color: var(--text-muted); margin-bottom: 1.75rem; font-size: .95rem; }
+
+  .card { background: var(--card); border: 1px solid var(--border); border-radius: 10px; padding: 1.3rem 1.5rem; margin: 1.25rem 0; }
+  .card.green { background: var(--green-soft); border-color: var(--green-border); }
+  .card.orange { background: var(--orange-soft); border-color: var(--orange-border); }
+  .card.red { background: var(--red-soft); border-color: var(--red-border); }
+  .card.blue { background: var(--blue-soft); border-color: var(--blue-border); }
+  .card h3 { margin-top: 0; }
+
+  .analogy { background: var(--orange-soft); border: 1px solid var(--orange-border); border-left: 4px solid var(--orange); border-radius: 8px; padding: 1.1rem 1.4rem; margin: 1.25rem 0; }
+  .analogy-label { font-weight: 700; color: var(--orange); display: block; margin-bottom: .45rem; font-size: .8rem; text-transform: uppercase; letter-spacing: .06em; }
+
+  .tabs { display: flex; gap: 4px; margin-bottom: -1px; flex-wrap: wrap; }
+  .tab-btn { background: var(--bg-soft); border: 1px solid var(--border); color: var(--text-muted); padding: .55rem 1.1rem; border-radius: 6px 6px 0 0; cursor: pointer; font-size: .88rem; transition: all .15s; font-family: inherit; }
+  .tab-btn:hover { color: var(--text); }
+  .tab-btn.active { background: var(--card); color: var(--blue); border-color: var(--border); border-bottom-color: var(--card); font-weight: 600; }
+  .tab-panel { display: none; background: var(--card); border: 1px solid var(--border); border-radius: 0 8px 8px 8px; padding: 1.4rem 1.5rem; }
   .tab-panel.active { display: block; }
-  table { width: 100%; border-collapse: collapse; margin: 1rem 0; }
-  th { background: #1c3a5e; color: var(--blue); padding: .7rem 1rem; text-align: left; font-size: .88rem; }
-  td { padding: .65rem 1rem; border-bottom: 1px solid var(--border); font-size: .9rem; vertical-align: top; }
-  tr:hover td { background: #161b22; }
-  .attack-step { display: flex; gap: 1rem; align-items: flex-start; padding: .8rem 1rem; border-radius: 6px; margin: .5rem 0; }
-  .attack-step.attacker { background: #2d1b1b; border-left: 3px solid var(--red); }
-  .attack-step.system { background: #1b2d1b; border-left: 3px solid var(--green); }
-  .attack-step.selinux { background: #1b1b2d; border-left: 3px solid var(--blue); }
-  .step-num { font-weight: 700; font-size: 1.1rem; min-width: 2rem; }
+  .tab-panel:first-child { border-top-left-radius: 0; }
+
+  table { width: 100%; border-collapse: collapse; margin: 1rem 0; background: var(--card); border: 1px solid var(--border); border-radius: 8px; overflow: hidden; }
+  th { background: var(--bg-soft); color: var(--text); padding: .75rem 1rem; text-align: left; font-size: .85rem; font-weight: 600; border-bottom: 1px solid var(--border); }
+  td { padding: .7rem 1rem; border-bottom: 1px solid var(--border-soft); font-size: .9rem; vertical-align: top; color: var(--text); }
+  tr:last-child td { border-bottom: none; }
+  tr:hover td { background: var(--bg-soft); }
+
+  .attack-step { display: flex; gap: 1rem; align-items: flex-start; padding: .9rem 1.1rem; border-radius: 8px; margin: .55rem 0; border: 1px solid; }
+  .attack-step.attacker { background: var(--red-soft); border-color: var(--red-border); }
+  .attack-step.system { background: var(--green-soft); border-color: var(--green-border); }
+  .attack-step.selinux { background: var(--blue-soft); border-color: var(--blue-border); }
+  .step-num { font-weight: 700; font-size: 1.15rem; min-width: 2rem; text-align: center; }
   .attacker .step-num { color: var(--red); }
   .system .step-num { color: var(--green); }
   .selinux .step-num { color: var(--blue); }
-  .summary-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 1rem; margin: 1rem 0; }
-  .summary-card { background: var(--card); border: 1px solid var(--border); border-radius: 8px; padding: 1.1rem; text-align: center; }
-  .summary-card .icon { font-size: 2rem; margin-bottom: .5rem; }
-  .summary-card .label { font-size: .8rem; color: var(--muted); text-transform: uppercase; letter-spacing: .05em; }
-  .summary-card .value { font-size: 1rem; color: var(--text); margin-top: .25rem; font-weight: 500; }
-  .nav-footer { display: flex; justify-content: space-between; align-items: center; padding: 2rem 0 1rem; border-top: 1px solid var(--border); margin-top: 2.5rem; }
-  .nav-btn { background: var(--card); border: 1px solid var(--border); color: var(--text); padding: .7rem 1.4rem; border-radius: 6px; cursor: pointer; font-size: .9rem; transition: all .2s; }
-  .nav-btn:hover { background: #1c3a5e; border-color: var(--blue); color: var(--blue); }
+  .step-body { flex: 1; }
+  .step-body strong { display: block; margin-bottom: .25rem; }
+
+  .summary-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 1rem; margin: 1rem 0; }
+  .summary-card { background: var(--card); border: 1px solid var(--border); border-radius: 8px; padding: 1.2rem; text-align: center; }
+  .summary-card .icon { font-size: 1.8rem; margin-bottom: .5rem; }
+  .summary-card .label { font-size: .75rem; color: var(--text-muted); text-transform: uppercase; letter-spacing: .06em; font-weight: 600; }
+  .summary-card .value { font-size: .92rem; color: var(--text); margin-top: .4rem; line-height: 1.5; }
+
+  .nav-footer { display: flex; justify-content: space-between; align-items: center; padding: 2rem 0 1rem; border-top: 1px solid var(--border); margin-top: 2.5rem; gap: 1rem; }
+  .nav-btn { background: var(--card); border: 1px solid var(--border); color: var(--text); padding: .7rem 1.3rem; border-radius: 6px; cursor: pointer; font-size: .9rem; transition: all .15s; font-family: inherit; text-decoration: none; display: inline-block; }
+  .nav-btn:hover { background: var(--blue-soft); border-color: var(--blue-border); color: var(--blue); text-decoration: none; }
   .nav-btn.disabled { opacity: .4; pointer-events: none; }
-  .highlight { color: var(--blue); font-weight: 600; }
-  .highlight.green { color: var(--green); }
-  .highlight.red { color: var(--red); }
-  .highlight.orange { color: var(--orange); }
+  .nav-meta { color: var(--text-muted); font-size: .85rem; }
+
   .svg-wrap { background: var(--card); border: 1px solid var(--border); border-radius: 10px; padding: 1.5rem; margin: 1.25rem 0; overflow-x: auto; }
-  /* Permission bits display */
-  .perm-block { display: inline-flex; font-family: monospace; font-size: 1.1rem; gap: 1px; }
-  .perm-r { color: #3fb950; }
-  .perm-w { color: #d29922; }
-  .perm-x { color: #58a6ff; }
-  .perm-s { color: #f85149; }
-  .perm-dash { color: #8b949e; }
-  .perm-sep { color: #30363d; margin: 0 4px; }
-  .perm-owner { border-bottom: 2px solid #3fb950; padding-bottom: 2px; }
-  .perm-group { border-bottom: 2px solid #58a6ff; padding-bottom: 2px; }
-  .perm-others { border-bottom: 2px solid #d29922; padding-bottom: 2px; }
-  .flow-box { display: flex; flex-direction: column; gap: .5rem; }
-  .flow-row { display: flex; align-items: center; gap: .75rem; }
-  .flow-diamond { background: #2d2a1a; border: 1px solid #d29922; padding: .5rem 1rem; border-radius: 4px; font-size: .9rem; }
-  .flow-yes { color: var(--green); font-weight: 700; }
-  .flow-no { color: var(--red); font-weight: 700; }
+  .svg-wrap svg { display: block; max-width: 100%; height: auto; }
+  .svg-caption { text-align: center; color: var(--text-muted); font-size: .85rem; margin-top: .75rem; font-style: italic; }
 </style>
 </head>
 <body>
 <div class="layout">
 
-<!-- SIDEBAR -->
 <nav class="sidebar">
   <h3>Phase 0 — Linux Foundations</h3>
   <ul>
     <li><a href="0-1-how-linux-works.html" class="done">0.1 How Linux Really Works</a></li>
     <li><a href="0-2-linux-filesystem.html" class="done">0.2 The Linux File System</a></li>
-    <li><a href="0-3-users-groups-dac.html" class="active">0.3 Users, Groups &amp; DAC</a></li>
-    <li><a href="#" style="opacity:.4">0.4 Processes &amp; Capabilities</a></li>
-    <li><a href="#" style="opacity:.4">0.5 Boot Sequence</a></li>
+    <li><a href="0-3-users-groups-dac.html" class="active done">0.3 Users, Groups &amp; DAC</a></li>
+    <li><a class="pending">0.4 Processes &amp; Capabilities</a></li>
+    <li><a class="pending">0.5 Boot Sequence</a></li>
   </ul>
   <h3 style="margin-top:1.5rem">Phase 1 — SELinux Concepts</h3>
   <ul>
-    <li><a href="#" style="opacity:.4">1.1 What SELinux Is</a></li>
-    <li><a href="#" style="opacity:.4">1.2 Labels &amp; Contexts</a></li>
-    <li><a href="#" style="opacity:.4">1.3 Type Enforcement</a></li>
-    <li><a href="#" style="opacity:.4">1.4 Roles &amp; Users</a></li>
-    <li><a href="#" style="opacity:.4">1.5 MLS &amp; MCS</a></li>
-    <li><a href="#" style="opacity:.4">1.6 Permissive vs Enforcing</a></li>
-    <li><a href="#" style="opacity:.4">1.7 AVC &amp; Audit</a></li>
+    <li><a class="pending">1.1 What SELinux Is</a></li>
+    <li><a class="pending">1.2 Labels &amp; Contexts</a></li>
+    <li><a class="pending">1.3 Type Enforcement</a></li>
+    <li><a class="pending">1.4 Roles &amp; Users</a></li>
+    <li><a class="pending">1.5 MLS &amp; MCS</a></li>
+    <li><a class="pending">1.6 Permissive vs Enforcing</a></li>
+    <li><a class="pending">1.7 AVC &amp; Audit</a></li>
   </ul>
 </nav>
 
-<!-- MAIN CONTENT -->
 <main class="main">
   <div class="phase-badge">Phase 0 · Module 0.3</div>
   <h1>Users, Groups &amp; DAC Permissions</h1>
-  <p style="color:var(--muted); margin-bottom:1.5rem">UIDs · GIDs · Permission Bits · DAC Check · setuid · Why DAC Fails &amp; SELinux Fixes It</p>
+  <p class="lead">UIDs · GIDs · Permission Bits · DAC Check · setuid · Why DAC Fails and SELinux Fixes It</p>
 
-  <!-- 1. WHY -->
   <h2>1 — Why Do We Need to Understand This?</h2>
-  <p>Before SELinux, Linux used <span class="highlight">DAC (Discretionary Access Control)</span> as its only permission system. Every file has an owner and permission bits. The owner decides who can access their files — that's why it's called "discretionary" (the owner has discretion).</p>
-  <p>Understanding DAC is essential because <span class="highlight">SELinux does not replace DAC — it adds on top of it</span>. Both checks happen. If DAC denies an action, SELinux never even runs. If DAC allows it, SELinux checks its own policy. An access is only permitted if <em>both</em> allow it.</p>
+  <p>Before SELinux, Linux used <strong>DAC (Discretionary Access Control)</strong> as its only permission system. Every file has an owner and permission bits. The owner decides who can access their files — that's why it's called "discretionary" (the owner has discretion).</p>
+  <p>Understanding DAC is essential because <strong>SELinux does not replace DAC — it adds on top of it</strong>. Both checks happen. If DAC denies an action, SELinux never even runs. If DAC allows it, SELinux checks its own policy. An access is only permitted if <em>both</em> allow it.</p>
   <p>On an ECU, knowing DAC tells you why running everything as root is dangerous — and why SELinux is the mandatory safety net that closes DAC's fundamental design flaws.</p>
 
   <div class="analogy">
-    DAC is like a house where each room has a combination lock and the room owner sets the combination — they can give it to anyone they choose. The problem: if the owner of the master bedroom gets robbed, the thief now has that combination and can come and go freely. SELinux is a separate security company that installs override locks on every door. Even if the thief has the combination, the security company's system says "this key card is not authorized for this door" — and keeps the door locked regardless.
+    <span class="analogy-label">💡 Analogy</span>
+    DAC is like a house where each room has a combination lock, and the room owner sets the combination — they can give it to anyone they choose. The problem: if the owner of the master bedroom gets robbed, the thief now has that combination and can come and go freely. SELinux is a separate security company that installs override locks on every door. Even if the thief has the combination, the security company's system says <em>"this key card is not authorized for this door"</em> — and keeps the door locked regardless.
   </div>
 
-  <!-- 2. UIDs AND GIDs -->
   <h2>2 — UIDs and GIDs: Numbers Behind Names</h2>
   <p>Every process and every file is associated with numeric identifiers. Linux does not care about names internally — it uses numbers.</p>
 
   <div class="svg-wrap">
-    <svg viewBox="0 0 760 230" xmlns="http://www.w3.org/2000/svg" style="width:100%;max-width:760px">
-      <rect width="760" height="230" fill="#0d1117" rx="8"/>
-      <!-- UID ranges -->
-      <rect x="20" y="20" width="155" height="190" fill="#2d1a2d" stroke="#bc8cff" rx="5"/>
-      <text x="97" y="42" fill="#bc8cff" font-size="11" text-anchor="middle" font-family="monospace" font-weight="bold">UID 0</text>
-      <text x="97" y="60" fill="#bc8cff" font-size="11" text-anchor="middle" font-family="monospace">root</text>
-      <text x="97" y="85" fill="#8b949e" font-size="9.5" text-anchor="middle" font-family="monospace">Full kernel access</text>
-      <text x="97" y="100" fill="#8b949e" font-size="9.5" text-anchor="middle" font-family="monospace">Bypasses DAC checks</text>
-      <text x="97" y="115" fill="#8b949e" font-size="9.5" text-anchor="middle" font-family="monospace">on most operations</text>
-      <text x="97" y="140" fill="#f85149" font-size="9.5" text-anchor="middle" font-family="monospace">⚠ SELinux still applies</text>
-      <text x="97" y="155" fill="#f85149" font-size="9.5" text-anchor="middle" font-family="monospace">even for UID=0</text>
+    <svg viewBox="0 0 820 260" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="UID ranges on a Linux ECU">
+      <!-- UID 0 -->
+      <rect x="20" y="20" width="180" height="220" fill="#fbefff" stroke="#c297ff" stroke-width="1.5" rx="8"/>
+      <text x="110" y="50" fill="#8250df" font-size="14" text-anchor="middle" font-family="ui-monospace, Menlo, monospace" font-weight="700">UID 0</text>
+      <text x="110" y="72" fill="#8250df" font-size="13" text-anchor="middle" font-family="ui-monospace, Menlo, monospace">root</text>
+      <line x1="35" y1="86" x2="185" y2="86" stroke="#c297ff" stroke-width="1"/>
+      <text x="110" y="108" fill="#424a53" font-size="11" text-anchor="middle">Full kernel access</text>
+      <text x="110" y="126" fill="#424a53" font-size="11" text-anchor="middle">Bypasses most DAC</text>
+      <text x="110" y="144" fill="#424a53" font-size="11" text-anchor="middle">checks</text>
+      <text x="110" y="180" fill="#cf222e" font-size="11" text-anchor="middle" font-weight="600">⚠ SELinux STILL applies</text>
+      <text x="110" y="198" fill="#cf222e" font-size="11" text-anchor="middle" font-weight="600">even for UID 0</text>
 
-      <rect x="190" y="20" width="155" height="190" fill="#1a2d2d" stroke="#39d353" rx="5"/>
-      <text x="267" y="42" fill="#39d353" font-size="11" text-anchor="middle" font-family="monospace" font-weight="bold">UID 1 – 999</text>
-      <text x="267" y="60" fill="#39d353" font-size="11" text-anchor="middle" font-family="monospace">System Accounts</text>
-      <text x="267" y="85" fill="#8b949e" font-size="9.5" text-anchor="middle" font-family="monospace">daemon, bin, sys</text>
-      <text x="267" y="100" fill="#8b949e" font-size="9.5" text-anchor="middle" font-family="monospace">Service accounts</text>
-      <text x="267" y="115" fill="#8b949e" font-size="9.5" text-anchor="middle" font-family="monospace">on ECU:</text>
-      <text x="267" y="132" fill="#3fb950" font-size="9.5" text-anchor="middle" font-family="monospace">ota_user (UID 100)</text>
-      <text x="267" y="148" fill="#3fb950" font-size="9.5" text-anchor="middle" font-family="monospace">can_gw (UID 101)</text>
-      <text x="267" y="164" fill="#3fb950" font-size="9.5" text-anchor="middle" font-family="monospace">v2x_svc (UID 102)</text>
-      <text x="267" y="180" fill="#3fb950" font-size="9.5" text-anchor="middle" font-family="monospace">diag_svc (UID 103)</text>
+      <!-- UID 1-999 -->
+      <rect x="215" y="20" width="180" height="220" fill="#dafbe1" stroke="#4ac26b" stroke-width="1.5" rx="8"/>
+      <text x="305" y="50" fill="#1a7f37" font-size="14" text-anchor="middle" font-family="ui-monospace, Menlo, monospace" font-weight="700">UID 1 – 999</text>
+      <text x="305" y="72" fill="#1a7f37" font-size="13" text-anchor="middle" font-family="ui-monospace, Menlo, monospace">system accounts</text>
+      <line x1="230" y1="86" x2="380" y2="86" stroke="#4ac26b" stroke-width="1"/>
+      <text x="305" y="108" fill="#424a53" font-size="11" text-anchor="middle">Daemon/service IDs</text>
+      <text x="305" y="135" fill="#1a7f37" font-size="11" text-anchor="middle" font-family="ui-monospace, Menlo, monospace">ota_user (100)</text>
+      <text x="305" y="153" fill="#1a7f37" font-size="11" text-anchor="middle" font-family="ui-monospace, Menlo, monospace">can_gw (101)</text>
+      <text x="305" y="171" fill="#1a7f37" font-size="11" text-anchor="middle" font-family="ui-monospace, Menlo, monospace">v2x_svc (102)</text>
+      <text x="305" y="189" fill="#1a7f37" font-size="11" text-anchor="middle" font-family="ui-monospace, Menlo, monospace">diag_svc (103)</text>
 
-      <rect x="360" y="20" width="155" height="190" fill="#1c3a5e" stroke="#58a6ff" rx="5"/>
-      <text x="437" y="42" fill="#58a6ff" font-size="11" text-anchor="middle" font-family="monospace" font-weight="bold">UID 1000+</text>
-      <text x="437" y="60" fill="#58a6ff" font-size="11" text-anchor="middle" font-family="monospace">Human Users</text>
-      <text x="437" y="85" fill="#8b949e" font-size="9.5" text-anchor="middle" font-family="monospace">Normal accounts</text>
-      <text x="437" y="100" fill="#8b949e" font-size="9.5" text-anchor="middle" font-family="monospace">On ECUs: rarely exist</text>
-      <text x="437" y="115" fill="#8b949e" font-size="9.5" text-anchor="middle" font-family="monospace">(headless systems)</text>
-      <text x="437" y="140" fill="#58a6ff" font-size="9.5" text-anchor="middle" font-family="monospace">Dev/debug accounts</text>
-      <text x="437" y="155" fill="#58a6ff" font-size="9.5" text-anchor="middle" font-family="monospace">removed in production</text>
+      <!-- UID 1000+ -->
+      <rect x="410" y="20" width="180" height="220" fill="#ddf4ff" stroke="#54aeff" stroke-width="1.5" rx="8"/>
+      <text x="500" y="50" fill="#0969da" font-size="14" text-anchor="middle" font-family="ui-monospace, Menlo, monospace" font-weight="700">UID 1000+</text>
+      <text x="500" y="72" fill="#0969da" font-size="13" text-anchor="middle" font-family="ui-monospace, Menlo, monospace">human users</text>
+      <line x1="425" y1="86" x2="575" y2="86" stroke="#54aeff" stroke-width="1"/>
+      <text x="500" y="108" fill="#424a53" font-size="11" text-anchor="middle">Normal user accounts</text>
+      <text x="500" y="135" fill="#424a53" font-size="11" text-anchor="middle">On ECUs: rarely exist</text>
+      <text x="500" y="153" fill="#424a53" font-size="11" text-anchor="middle">(headless systems)</text>
+      <text x="500" y="186" fill="#0969da" font-size="11" text-anchor="middle">Dev / debug accounts</text>
+      <text x="500" y="204" fill="#0969da" font-size="11" text-anchor="middle">removed in production</text>
 
-      <rect x="530" y="20" width="210" height="190" fill="#161b22" stroke="#30363d" rx="5"/>
-      <text x="635" y="42" fill="#8b949e" font-size="11" text-anchor="middle" font-family="monospace" font-weight="bold">Groups (GIDs)</text>
-      <text x="540" y="65" fill="#8b949e" font-size="9.5" font-family="monospace">A user can be in multiple groups</text>
-      <text x="540" y="85" fill="#8b949e" font-size="9.5" font-family="monospace">Process has one effective GID</text>
-      <text x="540" y="105" fill="#3fb950" font-size="9.5" font-family="monospace">ota_group (GID 100)</text>
-      <text x="540" y="120" fill="#3fb950" font-size="9.5" font-family="monospace">  → owns /etc/ota/</text>
-      <text x="540" y="140" fill="#3fb950" font-size="9.5" font-family="monospace">can_group (GID 101)</text>
-      <text x="540" y="155" fill="#3fb950" font-size="9.5" font-family="monospace">  → owns /dev/can0</text>
-      <text x="540" y="175" fill="#58a6ff" font-size="9.5" font-family="monospace">audit_group (GID 50)</text>
-      <text x="540" y="190" fill="#58a6ff" font-size="9.5" font-family="monospace">  → reads audit log</text>
+      <!-- GIDs sidebar -->
+      <rect x="605" y="20" width="195" height="220" fill="#f6f8fa" stroke="#d0d7de" stroke-width="1.5" rx="8"/>
+      <text x="702" y="50" fill="#1f2328" font-size="13" text-anchor="middle" font-weight="700">Groups (GIDs)</text>
+      <line x1="620" y1="64" x2="785" y2="64" stroke="#d0d7de" stroke-width="1"/>
+      <text x="615" y="86" fill="#656d76" font-size="10.5">A user can belong to many groups</text>
+      <text x="615" y="104" fill="#656d76" font-size="10.5">Process uses one effective GID</text>
+      <text x="615" y="134" fill="#1a7f37" font-size="11" font-family="ui-monospace, Menlo, monospace">ota_group (100)</text>
+      <text x="625" y="149" fill="#656d76" font-size="10">→ owns /etc/ota/</text>
+      <text x="615" y="174" fill="#1a7f37" font-size="11" font-family="ui-monospace, Menlo, monospace">can_group (101)</text>
+      <text x="625" y="189" fill="#656d76" font-size="10">→ owns /dev/can0</text>
+      <text x="615" y="214" fill="#0969da" font-size="11" font-family="ui-monospace, Menlo, monospace">audit_group (50)</text>
+      <text x="625" y="229" fill="#656d76" font-size="10">→ reads audit log</text>
     </svg>
+    <div class="svg-caption">UID/GID ranges used on a typical automotive Linux ECU</div>
   </div>
 
   <p>On a minimal ECU, the <code>/etc/passwd</code> file maps UIDs to names. The kernel only ever uses the number:</p>
-  <pre><code># /etc/passwd entries for ECU services (format: name:x:uid:gid:comment:home:shell)
+<pre><code># /etc/passwd format: name:x:uid:gid:comment:home:shell
 root:x:0:0:root:/root:/bin/sh
 ota_user:x:100:100:OTA service:/var/ota:/sbin/nologin
 can_gw:x:101:101:CAN gateway:/:/sbin/nologin
 v2x_svc:x:102:102:V2X service:/:/sbin/nologin
 diag_svc:x:103:103:Diagnostics:/:/sbin/nologin</code></pre>
 
-  <!-- 3. PERMISSION BITS -->
   <h2>3 — Permission Bits: The 10-Character Code on Every File</h2>
-  <p>Run <code>ls -l</code> on any file and you see something like <code>-rwxr-xr--</code>. This 10-character string is the file's DAC permission encoding. Let's decode it character by character.</p>
+  <p>Run <code>ls -l</code> on any file and you see something like <code>-rwxr-xr--</code>. This 10-character string is the file's DAC permission encoding. Let's decode it position by position.</p>
 
+  <!-- FIXED PERMISSION BITS SVG -->
   <div class="svg-wrap">
-    <svg viewBox="0 0 760 200" xmlns="http://www.w3.org/2000/svg" style="width:100%;max-width:760px">
-      <rect width="760" height="200" fill="#0d1117" rx="8"/>
-      <!-- the string -->
-      <text x="380" y="50" fill="#e6edf3" font-size="28" text-anchor="middle" font-family="monospace" letter-spacing="6">-rwxr-xr--</text>
-      <!-- brackets and labels -->
-      <!-- type char -->
-      <line x1="105" y1="60" x2="105" y2="80" stroke="#8b949e" stroke-width="1"/>
-      <text x="105" y="95" fill="#8b949e" font-size="10" text-anchor="middle" font-family="monospace">file type</text>
-      <text x="105" y="108" fill="#8b949e" font-size="10" text-anchor="middle" font-family="monospace">- = regular</text>
-      <!-- owner rwx -->
-      <rect x="120" y="15" width="90" height="30" fill="none" stroke="#3fb950" stroke-width="1" rx="2" stroke-dasharray="3,2"/>
-      <text x="165" y="115" fill="#3fb950" font-size="10" text-anchor="middle" font-family="monospace">OWNER</text>
-      <text x="165" y="128" fill="#3fb950" font-size="10" text-anchor="middle" font-family="monospace">r=read w=write x=exec</text>
-      <!-- group r-x -->
-      <rect x="215" y="15" width="90" height="30" fill="none" stroke="#58a6ff" stroke-width="1" rx="2" stroke-dasharray="3,2"/>
-      <text x="260" y="115" fill="#58a6ff" font-size="10" text-anchor="middle" font-family="monospace">GROUP</text>
-      <text x="260" y="128" fill="#58a6ff" font-size="10" text-anchor="middle" font-family="monospace">r=read -=no_write x=exec</text>
-      <!-- others r-- -->
-      <rect x="310" y="15" width="90" height="30" fill="none" stroke="#d29922" stroke-width="1" rx="2" stroke-dasharray="3,2"/>
-      <text x="355" y="115" fill="#d29922" font-size="10" text-anchor="middle" font-family="monospace">OTHERS</text>
-      <text x="355" y="128" fill="#d29922" font-size="10" text-anchor="middle" font-family="monospace">r=read -=no_write -=no_exec</text>
-      <!-- octal -->
-      <text x="380" y="160" fill="#8b949e" font-size="11" text-anchor="middle" font-family="monospace">Octal: 0754</text>
-      <text x="380" y="178" fill="#8b949e" font-size="10" text-anchor="middle" font-family="monospace">owner=7(rwx)  group=5(r-x)  others=4(r--)</text>
+    <svg viewBox="0 0 760 360" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="Permission bits breakdown for rwxr-xr--">
+      <!-- The 10 character positions, each cell is 50px wide, centered horizontally -->
+      <!-- Total width = 10 * 50 = 500px, start at x = (760 - 500) / 2 = 130 -->
+
+      <!-- File type cell (char 0) -->
+      <rect x="130" y="40" width="50" height="60" fill="#f6f8fa" stroke="#d0d7de" stroke-width="1.5" rx="4"/>
+      <text x="155" y="80" fill="#1f2328" font-size="28" text-anchor="middle" font-family="ui-monospace, Menlo, monospace" font-weight="700">-</text>
+
+      <!-- OWNER cells (chars 1-3) -->
+      <rect x="180" y="40" width="150" height="60" fill="#dafbe1" stroke="#1a7f37" stroke-width="2" rx="4"/>
+      <text x="205" y="80" fill="#1a7f37" font-size="28" text-anchor="middle" font-family="ui-monospace, Menlo, monospace" font-weight="700">r</text>
+      <text x="255" y="80" fill="#1a7f37" font-size="28" text-anchor="middle" font-family="ui-monospace, Menlo, monospace" font-weight="700">w</text>
+      <text x="305" y="80" fill="#1a7f37" font-size="28" text-anchor="middle" font-family="ui-monospace, Menlo, monospace" font-weight="700">x</text>
+
+      <!-- GROUP cells (chars 4-6) -->
+      <rect x="330" y="40" width="150" height="60" fill="#ddf4ff" stroke="#0969da" stroke-width="2" rx="4"/>
+      <text x="355" y="80" fill="#0969da" font-size="28" text-anchor="middle" font-family="ui-monospace, Menlo, monospace" font-weight="700">r</text>
+      <text x="405" y="80" fill="#656d76" font-size="28" text-anchor="middle" font-family="ui-monospace, Menlo, monospace" font-weight="700">-</text>
+      <text x="455" y="80" fill="#0969da" font-size="28" text-anchor="middle" font-family="ui-monospace, Menlo, monospace" font-weight="700">x</text>
+
+      <!-- OTHERS cells (chars 7-9) -->
+      <rect x="480" y="40" width="150" height="60" fill="#fff8c5" stroke="#9a6700" stroke-width="2" rx="4"/>
+      <text x="505" y="80" fill="#9a6700" font-size="28" text-anchor="middle" font-family="ui-monospace, Menlo, monospace" font-weight="700">r</text>
+      <text x="555" y="80" fill="#656d76" font-size="28" text-anchor="middle" font-family="ui-monospace, Menlo, monospace" font-weight="700">-</text>
+      <text x="605" y="80" fill="#656d76" font-size="28" text-anchor="middle" font-family="ui-monospace, Menlo, monospace" font-weight="700">-</text>
+
+      <!-- Connector lines and labels for file type -->
+      <line x1="155" y1="100" x2="155" y2="125" stroke="#656d76" stroke-width="1.5"/>
+      <text x="155" y="142" fill="#1f2328" font-size="11" text-anchor="middle" font-weight="600">File type</text>
+      <text x="155" y="158" fill="#656d76" font-size="10" text-anchor="middle">- = regular file</text>
+
+      <!-- OWNER label block -->
+      <line x1="255" y1="100" x2="255" y2="125" stroke="#1a7f37" stroke-width="1.5"/>
+      <rect x="180" y="130" width="150" height="60" fill="#dafbe1" stroke="#1a7f37" stroke-width="1" rx="4"/>
+      <text x="255" y="150" fill="#1a7f37" font-size="12" text-anchor="middle" font-weight="700">OWNER</text>
+      <text x="255" y="167" fill="#1a7f37" font-size="10" text-anchor="middle">r=read · w=write</text>
+      <text x="255" y="182" fill="#1a7f37" font-size="10" text-anchor="middle">x=execute</text>
+
+      <!-- GROUP label block -->
+      <line x1="405" y1="100" x2="405" y2="125" stroke="#0969da" stroke-width="1.5"/>
+      <rect x="330" y="130" width="150" height="60" fill="#ddf4ff" stroke="#0969da" stroke-width="1" rx="4"/>
+      <text x="405" y="150" fill="#0969da" font-size="12" text-anchor="middle" font-weight="700">GROUP</text>
+      <text x="405" y="167" fill="#0969da" font-size="10" text-anchor="middle">r=read · - = no write</text>
+      <text x="405" y="182" fill="#0969da" font-size="10" text-anchor="middle">x=execute</text>
+
+      <!-- OTHERS label block -->
+      <line x1="555" y1="100" x2="555" y2="125" stroke="#9a6700" stroke-width="1.5"/>
+      <rect x="480" y="130" width="150" height="60" fill="#fff8c5" stroke="#9a6700" stroke-width="1" rx="4"/>
+      <text x="555" y="150" fill="#9a6700" font-size="12" text-anchor="middle" font-weight="700">OTHERS</text>
+      <text x="555" y="167" fill="#9a6700" font-size="10" text-anchor="middle">r=read · - = no write</text>
+      <text x="555" y="182" fill="#9a6700" font-size="10" text-anchor="middle">- = no execute</text>
+
+      <!-- Octal section -->
+      <rect x="130" y="220" width="500" height="100" fill="#f6f8fa" stroke="#d0d7de" stroke-width="1.5" rx="6"/>
+      <text x="380" y="245" fill="#1f2328" font-size="13" text-anchor="middle" font-weight="700">Octal Encoding</text>
+      <text x="380" y="270" fill="#1f2328" font-size="20" text-anchor="middle" font-family="ui-monospace, Menlo, monospace" font-weight="700">0 7 5 4</text>
+
+      <text x="195" y="297" fill="#1a7f37" font-size="11" text-anchor="middle" font-family="ui-monospace, Menlo, monospace">owner = 7</text>
+      <text x="195" y="311" fill="#656d76" font-size="10" text-anchor="middle">rwx = 4+2+1</text>
+
+      <text x="320" y="297" fill="#0969da" font-size="11" text-anchor="middle" font-family="ui-monospace, Menlo, monospace">group = 5</text>
+      <text x="320" y="311" fill="#656d76" font-size="10" text-anchor="middle">r-x = 4+0+1</text>
+
+      <text x="445" y="297" fill="#9a6700" font-size="11" text-anchor="middle" font-family="ui-monospace, Menlo, monospace">others = 4</text>
+      <text x="445" y="311" fill="#656d76" font-size="10" text-anchor="middle">r-- = 4+0+0</text>
+
+      <text x="570" y="297" fill="#1f2328" font-size="11" text-anchor="middle" font-family="ui-monospace, Menlo, monospace">chmod 754</text>
+      <text x="570" y="311" fill="#656d76" font-size="10" text-anchor="middle">file.sh</text>
+
+      <!-- Title -->
+      <text x="380" y="25" fill="#1f2328" font-size="13" text-anchor="middle" font-weight="700">Anatomy of -rwxr-xr--</text>
     </svg>
+    <div class="svg-caption">Each position in the 10-character string maps to a specific permission</div>
   </div>
 
   <div class="tabs" id="tabs-perms">
-    <button class="tab-btn active" onclick="switchTab('perms','files')">Files</button>
-    <button class="tab-btn" onclick="switchTab('perms','dirs')">Directories</button>
-    <button class="tab-btn" onclick="switchTab('perms','special')">Special Bits</button>
-    <button class="tab-btn" onclick="switchTab('perms','ecu')">ECU Examples</button>
+    <button class="tab-btn active" onclick="switchTab(event,'perms','files')">On Files</button>
+    <button class="tab-btn" onclick="switchTab(event,'perms','dirs')">On Directories</button>
+    <button class="tab-btn" onclick="switchTab(event,'perms','special')">Special Bits</button>
+    <button class="tab-btn" onclick="switchTab(event,'perms','ecu')">ECU Examples</button>
   </div>
   <div class="tab-panel active" id="perms-files">
     <table>
@@ -237,20 +305,20 @@ diag_svc:x:103:103:Diagnostics:/:/sbin/nologin</code></pre>
   <div class="tab-panel" id="perms-dirs">
     <table>
       <tr><th>Bit</th><th>On a Directory</th><th>Example</th></tr>
-      <tr><td><code>r</code> (read)</td><td>Can list the directory's contents (<code>ls</code>)</td><td>List files in <code>/etc/ota/</code></td></tr>
+      <tr><td><code>r</code> (read)</td><td>Can list directory contents (<code>ls</code>)</td><td>List files in <code>/etc/ota/</code></td></tr>
       <tr><td><code>w</code> (write)</td><td>Can create, delete, or rename files inside</td><td>Write new firmware to <code>/data/ota/</code></td></tr>
       <tr><td><code>x</code> (execute)</td><td>Can enter the directory and access files inside (needed to use a path)</td><td><code>cd /etc/ota/</code></td></tr>
     </table>
-    <p><strong>Tricky rule:</strong> You need both <code>r</code> and <code>x</code> on a directory to do a normal <code>ls</code>. With only <code>x</code> you can access files if you know their exact name, but cannot list them. With only <code>r</code> you can list names but cannot open files.</p>
+    <p style="margin-top:1rem"><strong>Tricky rule:</strong> You need both <code>r</code> and <code>x</code> on a directory to do a normal <code>ls</code>. With only <code>x</code> you can access files if you know their exact name, but cannot list them. With only <code>r</code> you can list names but cannot open files.</p>
   </div>
   <div class="tab-panel" id="perms-special">
     <table>
       <tr><th>Bit</th><th>What It Does</th><th>Security Risk</th></tr>
-      <tr><td><code>setuid (s)</code></td><td>When executed, process runs with the <strong>file owner's UID</strong> instead of the caller's UID</td><td><span style="color:var(--red)">High — root-owned setuid binaries run as root for any caller</span></td></tr>
-      <tr><td><code>setgid (s)</code></td><td>Process runs with the file's GID; on directories: new files inherit parent GID</td><td><span style="color:var(--orange)">Medium — can escalate group privileges</span></td></tr>
-      <tr><td><code>sticky (t)</code></td><td>On a directory: only the file owner can delete their own files (used on <code>/tmp</code>)</td><td><span style="color:var(--green)">Protective — prevents others deleting your files</span></td></tr>
+      <tr><td><code>setuid (s)</code></td><td>When executed, process runs with the <strong>file owner's UID</strong> instead of the caller's UID</td><td style="color:var(--red);font-weight:600">High — root-owned setuid binaries run as root for anyone</td></tr>
+      <tr><td><code>setgid (s)</code></td><td>Process runs with the file's GID; on directories: new files inherit parent GID</td><td style="color:var(--orange);font-weight:600">Medium — can escalate group privileges</td></tr>
+      <tr><td><code>sticky (t)</code></td><td>On a directory: only the file owner can delete their own files (used on <code>/tmp</code>)</td><td style="color:var(--green);font-weight:600">Protective — prevents others deleting your files</td></tr>
     </table>
-    <pre><code># setuid example — /usr/bin/passwd is owned root but has setuid bit
+<pre style="margin-top:1rem"><code># setuid example — /usr/bin/passwd is owned root but has setuid bit
 -rwsr-xr-x root root /usr/bin/passwd
 #   ^ The 's' in owner execute position = setuid
 
@@ -260,339 +328,344 @@ diag_svc:x:103:103:Diagnostics:/:/sbin/nologin</code></pre>
   </div>
   <div class="tab-panel" id="perms-ecu">
     <table>
-      <tr><th>File</th><th>Permissions</th><th>Who Owns It</th><th>Why</th></tr>
-      <tr><td><code>/usr/bin/ota_daemon</code></td><td><code>-rwxr-x---</code> (750)</td><td>root:ota_group</td><td>Only ota_group members can execute</td></tr>
-      <tr><td><code>/etc/ota/config.json</code></td><td><code>-rw-r-----</code> (640)</td><td>ota_user:ota_group</td><td>ota_user can write; ota_group can read</td></tr>
-      <tr><td><code>/etc/ota/private.key</code></td><td><code>-r--------</code> (400)</td><td>ota_user:ota_group</td><td>Only ota_user can read the private key</td></tr>
-      <tr><td><code>/dev/can0</code></td><td><code>crw-rw----</code> (660)</td><td>root:can_group</td><td>Only can_group members can access CAN</td></tr>
-      <tr><td><code>/dev/tpm0</code></td><td><code>crw-------</code> (600)</td><td>root:root</td><td>Only root can access TPM (via SELinux further restricted)</td></tr>
-      <tr><td><code>/var/log/audit/audit.log</code></td><td><code>-rw-r-----</code> (640)</td><td>root:audit_group</td><td>audit_group can read logs; others cannot</td></tr>
+      <tr><th>File</th><th>Permissions</th><th>Owner : Group</th><th>Why</th></tr>
+      <tr><td><code>/usr/bin/ota_daemon</code></td><td><code>-rwxr-x---</code> (750)</td><td>root : ota_group</td><td>Only ota_group can execute</td></tr>
+      <tr><td><code>/etc/ota/config.json</code></td><td><code>-rw-r-----</code> (640)</td><td>ota_user : ota_group</td><td>ota_user writes; ota_group reads</td></tr>
+      <tr><td><code>/etc/ota/private.key</code></td><td><code>-r--------</code> (400)</td><td>ota_user : ota_group</td><td>Only ota_user can read the key</td></tr>
+      <tr><td><code>/dev/can0</code></td><td><code>crw-rw----</code> (660)</td><td>root : can_group</td><td>Only can_group can use CAN</td></tr>
+      <tr><td><code>/dev/tpm0</code></td><td><code>crw-------</code> (600)</td><td>root : root</td><td>Only root can access TPM</td></tr>
+      <tr><td><code>/var/log/audit/audit.log</code></td><td><code>-rw-r-----</code> (640)</td><td>root : audit_group</td><td>audit_group reads logs only</td></tr>
     </table>
   </div>
 
-  <!-- 4. DAC CHECK FLOWCHART -->
   <h2>4 — How DAC Permission Checks Work</h2>
   <p>When a process tries to access a file, the kernel runs the DAC check in this exact order:</p>
 
   <div class="svg-wrap">
-    <svg viewBox="0 0 760 420" xmlns="http://www.w3.org/2000/svg" style="width:100%;max-width:760px">
-      <rect width="760" height="420" fill="#0d1117" rx="8"/>
+    <svg viewBox="0 0 820 540" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="DAC permission check flowchart">
       <defs>
-        <marker id="farr" markerWidth="8" markerHeight="8" refX="6" refY="3" orient="auto">
-          <path d="M0,0 L0,6 L8,3 z" fill="#58a6ff"/>
+        <marker id="arr-blue" markerWidth="10" markerHeight="10" refX="8" refY="4" orient="auto">
+          <path d="M0,0 L0,8 L10,4 z" fill="#0969da"/>
         </marker>
-        <marker id="yarr" markerWidth="8" markerHeight="8" refX="6" refY="3" orient="auto">
-          <path d="M0,0 L0,6 L8,3 z" fill="#3fb950"/>
+        <marker id="arr-green" markerWidth="10" markerHeight="10" refX="8" refY="4" orient="auto">
+          <path d="M0,0 L0,8 L10,4 z" fill="#1a7f37"/>
         </marker>
-        <marker id="narr" markerWidth="8" markerHeight="8" refX="6" refY="3" orient="auto">
-          <path d="M0,0 L0,6 L8,3 z" fill="#f85149"/>
+        <marker id="arr-red" markerWidth="10" markerHeight="10" refX="8" refY="4" orient="auto">
+          <path d="M0,0 L0,8 L10,4 z" fill="#cf222e"/>
         </marker>
       </defs>
+
       <!-- Start -->
-      <rect x="295" y="10" width="170" height="35" fill="#1c3a5e" stroke="#58a6ff" rx="4"/>
-      <text x="380" y="32" fill="#58a6ff" font-size="12" text-anchor="middle" font-family="monospace">Process requests access</text>
-      <!-- arrow down -->
-      <line x1="380" y1="45" x2="380" y2="70" stroke="#58a6ff" stroke-width="1.5" marker-end="url(#farr)"/>
+      <rect x="310" y="15" width="200" height="40" fill="#ddf4ff" stroke="#54aeff" stroke-width="1.5" rx="6"/>
+      <text x="410" y="40" fill="#0969da" font-size="13" text-anchor="middle" font-weight="600">Process requests file access</text>
+      <line x1="410" y1="55" x2="410" y2="75" stroke="#0969da" stroke-width="1.5" marker-end="url(#arr-blue)"/>
+
       <!-- Q1: root? -->
-      <polygon points="380,70 480,100 380,130 280,100" fill="#2d1a2d" stroke="#bc8cff" stroke-width="1.5"/>
-      <text x="380" y="96" fill="#bc8cff" font-size="11" text-anchor="middle" font-family="monospace">Is process UID = 0?</text>
-      <text x="380" y="110" fill="#bc8cff" font-size="11" text-anchor="middle" font-family="monospace">(root)</text>
+      <polygon points="410,80 530,120 410,160 290,120" fill="#fbefff" stroke="#c297ff" stroke-width="2"/>
+      <text x="410" y="115" fill="#8250df" font-size="12" text-anchor="middle" font-weight="600">Is process UID = 0?</text>
+      <text x="410" y="132" fill="#8250df" font-size="12" text-anchor="middle">(root)</text>
       <!-- YES → allow -->
-      <line x1="480" y1="100" x2="600" y2="100" stroke="#3fb950" stroke-width="1.5" marker-end="url(#yarr)"/>
-      <text x="537" y="94" fill="#3fb950" font-size="10" font-family="monospace">YES</text>
-      <rect x="600" y="82" width="130" height="35" fill="#1a2d1a" stroke="#3fb950" rx="4"/>
-      <text x="665" y="100" fill="#3fb950" font-size="11" text-anchor="middle" font-family="monospace">ALLOW (DAC)</text>
-      <text x="665" y="113" fill="#8b949e" font-size="9" text-anchor="middle" font-family="monospace">→ SELinux still checks</text>
+      <line x1="530" y1="120" x2="630" y2="120" stroke="#1a7f37" stroke-width="1.5" marker-end="url(#arr-green)"/>
+      <text x="580" y="113" fill="#1a7f37" font-size="11" font-weight="600">YES</text>
+      <rect x="630" y="100" width="170" height="50" fill="#dafbe1" stroke="#4ac26b" stroke-width="1.5" rx="6"/>
+      <text x="715" y="123" fill="#1a7f37" font-size="12" text-anchor="middle" font-weight="700">ALLOW (DAC)</text>
+      <text x="715" y="140" fill="#1a7f37" font-size="10" text-anchor="middle">→ SELinux still checks</text>
       <!-- NO → Q2 -->
-      <line x1="380" y1="130" x2="380" y2="155" stroke="#58a6ff" stroke-width="1.5" marker-end="url(#farr)"/>
-      <text x="388" y="147" fill="#8b949e" font-size="10" font-family="monospace">NO</text>
+      <line x1="410" y1="160" x2="410" y2="185" stroke="#0969da" stroke-width="1.5" marker-end="url(#arr-blue)"/>
+      <text x="425" y="178" fill="#656d76" font-size="11" font-weight="600">NO</text>
+
       <!-- Q2: owner? -->
-      <polygon points="380,155 480,185 380,215 280,185" fill="#2d2a1a" stroke="#d29922" stroke-width="1.5"/>
-      <text x="380" y="181" fill="#d29922" font-size="11" text-anchor="middle" font-family="monospace">Is process UID</text>
-      <text x="380" y="196" fill="#d29922" font-size="11" text-anchor="middle" font-family="monospace">= file owner UID?</text>
-      <!-- YES → owner bits -->
-      <line x1="480" y1="185" x2="580" y2="185" stroke="#3fb950" stroke-width="1.5" marker-end="url(#yarr)"/>
-      <text x="527" y="178" fill="#3fb950" font-size="10" font-family="monospace">YES</text>
-      <rect x="580" y="167" width="155" height="35" fill="#1a2d1a" stroke="#3fb950" rx="4"/>
-      <text x="657" y="183" fill="#3fb950" font-size="11" text-anchor="middle" font-family="monospace">Apply OWNER bits</text>
-      <text x="657" y="196" fill="#8b949e" font-size="9" text-anchor="middle" font-family="monospace">rwx of owner section</text>
-      <!-- NO → Q3 -->
-      <line x1="380" y1="215" x2="380" y2="240" stroke="#58a6ff" stroke-width="1.5" marker-end="url(#farr)"/>
-      <text x="388" y="232" fill="#8b949e" font-size="10" font-family="monospace">NO</text>
+      <polygon points="410,190 530,230 410,270 290,230" fill="#fff8c5" stroke="#d4a72c" stroke-width="2"/>
+      <text x="410" y="223" fill="#9a6700" font-size="12" text-anchor="middle" font-weight="600">Is process UID</text>
+      <text x="410" y="240" fill="#9a6700" font-size="12" text-anchor="middle">= file owner UID?</text>
+      <line x1="530" y1="230" x2="610" y2="230" stroke="#1a7f37" stroke-width="1.5" marker-end="url(#arr-green)"/>
+      <text x="565" y="223" fill="#1a7f37" font-size="11" font-weight="600">YES</text>
+      <rect x="610" y="210" width="190" height="50" fill="#dafbe1" stroke="#4ac26b" stroke-width="1.5" rx="6"/>
+      <text x="705" y="233" fill="#1a7f37" font-size="12" text-anchor="middle" font-weight="700">Apply OWNER bits</text>
+      <text x="705" y="250" fill="#1a7f37" font-size="10" text-anchor="middle">rwx of owner section</text>
+      <line x1="410" y1="270" x2="410" y2="295" stroke="#0969da" stroke-width="1.5" marker-end="url(#arr-blue)"/>
+      <text x="425" y="288" fill="#656d76" font-size="11" font-weight="600">NO</text>
+
       <!-- Q3: group? -->
-      <polygon points="380,240 480,270 380,300 280,270" fill="#1c3a5e" stroke="#58a6ff" stroke-width="1.5"/>
-      <text x="380" y="266" fill="#58a6ff" font-size="11" text-anchor="middle" font-family="monospace">Is process GID</text>
-      <text x="380" y="281" fill="#58a6ff" font-size="11" text-anchor="middle" font-family="monospace">in file's group?</text>
-      <!-- YES → group bits -->
-      <line x1="480" y1="270" x2="580" y2="270" stroke="#3fb950" stroke-width="1.5" marker-end="url(#yarr)"/>
-      <text x="527" y="263" fill="#3fb950" font-size="10" font-family="monospace">YES</text>
-      <rect x="580" y="252" width="155" height="35" fill="#1a2d1a" stroke="#3fb950" rx="4"/>
-      <text x="657" y="268" fill="#3fb950" font-size="11" text-anchor="middle" font-family="monospace">Apply GROUP bits</text>
-      <text x="657" y="281" fill="#8b949e" font-size="9" text-anchor="middle" font-family="monospace">rwx of group section</text>
-      <!-- NO → others bits -->
-      <line x1="380" y1="300" x2="380" y2="330" stroke="#58a6ff" stroke-width="1.5" marker-end="url(#farr)"/>
-      <text x="388" y="320" fill="#8b949e" font-size="10" font-family="monospace">NO</text>
-      <rect x="280" y="330" width="200" height="35" fill="#2d2a1a" stroke="#d29922" rx="4"/>
-      <text x="380" y="350" fill="#d29922" font-size="11" text-anchor="middle" font-family="monospace">Apply OTHERS bits</text>
-      <!-- DENY box -->
-      <line x1="280" y1="347" x2="180" y2="347" stroke="#f85149" stroke-width="1.5" marker-end="url(#narr)"/>
-      <rect x="50" y="330" width="130" height="35" fill="#2d1a1a" stroke="#f85149" rx="4"/>
-      <text x="115" y="348" fill="#f85149" font-size="11" text-anchor="middle" font-family="monospace">DENY (EACCES)</text>
-      <text x="115" y="361" fill="#8b949e" font-size="9" text-anchor="middle" font-family="monospace">if bit not set</text>
-      <!-- final note -->
-      <rect x="20" y="385" width="720" height="28" fill="#161b22" stroke="#30363d" rx="4"/>
-      <text x="380" y="402" fill="#58a6ff" font-size="10" text-anchor="middle" font-family="monospace">After DAC ALLOW → SELinux runs its own policy check. BOTH must pass for access to succeed.</text>
+      <polygon points="410,300 530,340 410,380 290,340" fill="#ddf4ff" stroke="#54aeff" stroke-width="2"/>
+      <text x="410" y="333" fill="#0969da" font-size="12" text-anchor="middle" font-weight="600">Is process GID</text>
+      <text x="410" y="350" fill="#0969da" font-size="12" text-anchor="middle">in file's group?</text>
+      <line x1="530" y1="340" x2="610" y2="340" stroke="#1a7f37" stroke-width="1.5" marker-end="url(#arr-green)"/>
+      <text x="565" y="333" fill="#1a7f37" font-size="11" font-weight="600">YES</text>
+      <rect x="610" y="320" width="190" height="50" fill="#dafbe1" stroke="#4ac26b" stroke-width="1.5" rx="6"/>
+      <text x="705" y="343" fill="#1a7f37" font-size="12" text-anchor="middle" font-weight="700">Apply GROUP bits</text>
+      <text x="705" y="360" fill="#1a7f37" font-size="10" text-anchor="middle">rwx of group section</text>
+      <line x1="410" y1="380" x2="410" y2="405" stroke="#0969da" stroke-width="1.5" marker-end="url(#arr-blue)"/>
+      <text x="425" y="398" fill="#656d76" font-size="11" font-weight="600">NO</text>
+
+      <!-- OTHERS -->
+      <rect x="310" y="410" width="200" height="50" fill="#fff8c5" stroke="#d4a72c" stroke-width="1.5" rx="6"/>
+      <text x="410" y="433" fill="#9a6700" font-size="12" text-anchor="middle" font-weight="700">Apply OTHERS bits</text>
+      <text x="410" y="450" fill="#9a6700" font-size="10" text-anchor="middle">rwx of others section</text>
+
+      <!-- Deny path -->
+      <line x1="310" y1="435" x2="220" y2="435" stroke="#cf222e" stroke-width="1.5" marker-end="url(#arr-red)"/>
+      <rect x="40" y="410" width="180" height="50" fill="#ffebe9" stroke="#ff8182" stroke-width="1.5" rx="6"/>
+      <text x="130" y="433" fill="#cf222e" font-size="12" text-anchor="middle" font-weight="700">DENY (EACCES)</text>
+      <text x="130" y="450" fill="#cf222e" font-size="10" text-anchor="middle">if bit is not set</text>
+
+      <!-- Footer note -->
+      <rect x="40" y="490" width="760" height="36" fill="#ddf4ff" stroke="#54aeff" stroke-width="1.5" rx="6"/>
+      <text x="420" y="513" fill="#0969da" font-size="12" text-anchor="middle" font-weight="600">After DAC ALLOW → SELinux runs its own policy check. BOTH must pass for access to succeed.</text>
     </svg>
+    <div class="svg-caption">The kernel's DAC check sequence — note that UID 0 short-circuits the entire check</div>
   </div>
 
   <div class="card orange">
     <h3>The Root Problem</h3>
-    <p>Notice the very first check: <em>Is UID = 0?</em> If yes, DAC grants access without checking any permission bits (for most operations). This means any process running as root can read, write, or execute nearly any file. On an embedded ECU where every daemon runs as root "for convenience", a single compromised service = total system compromise. This is the core DAC weakness that SELinux was designed to fix.</p>
+    <p style="margin-bottom:0">Notice the very first check: <em>Is UID = 0?</em> If yes, DAC grants access without checking any permission bits (for most operations). This means any process running as root can read, write, or execute nearly any file. On an embedded ECU where every daemon runs as root "for convenience", a single compromised service equals total system compromise. This is the core DAC weakness that SELinux was designed to fix.</p>
   </div>
 
-  <!-- 5. UID INHERITANCE -->
   <h2>5 — UID Inheritance: How Processes Get Their UID</h2>
   <p>When a process is created (via <code>fork()</code>), it inherits the UID of its parent. This creates an inheritance chain starting from the kernel's initial process.</p>
 
   <div class="svg-wrap">
-    <svg viewBox="0 0 760 130" xmlns="http://www.w3.org/2000/svg" style="width:100%;max-width:760px">
-      <rect width="760" height="130" fill="#0d1117" rx="8"/>
+    <svg viewBox="0 0 820 200" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="UID inheritance chain">
       <defs>
-        <marker id="uarr" markerWidth="8" markerHeight="8" refX="6" refY="3" orient="auto">
-          <path d="M0,0 L0,6 L8,3 z" fill="#8b949e"/>
+        <marker id="uarr" markerWidth="10" markerHeight="10" refX="8" refY="4" orient="auto">
+          <path d="M0,0 L0,8 L10,4 z" fill="#656d76"/>
         </marker>
       </defs>
       <!-- kernel init -->
-      <rect x="10" y="40" width="120" height="50" fill="#2d1a2d" stroke="#bc8cff" rx="4"/>
-      <text x="70" y="62" fill="#bc8cff" font-size="10" text-anchor="middle" font-family="monospace">kernel init</text>
-      <text x="70" y="78" fill="#8b949e" font-size="10" text-anchor="middle" font-family="monospace">UID=0</text>
-      <line x1="130" y1="65" x2="160" y2="65" stroke="#8b949e" stroke-width="1.5" marker-end="url(#uarr)"/>
+      <rect x="20" y="60" width="140" height="60" fill="#fbefff" stroke="#c297ff" stroke-width="1.5" rx="6"/>
+      <text x="90" y="85" fill="#8250df" font-size="12" text-anchor="middle" font-weight="700">kernel init</text>
+      <text x="90" y="105" fill="#8250df" font-size="11" text-anchor="middle" font-family="ui-monospace, monospace">UID = 0</text>
+      <line x1="160" y1="90" x2="195" y2="90" stroke="#656d76" stroke-width="1.5" marker-end="url(#uarr)"/>
+
       <!-- systemd -->
-      <rect x="160" y="40" width="120" height="50" fill="#1c3a5e" stroke="#58a6ff" rx="4"/>
-      <text x="220" y="62" fill="#58a6ff" font-size="10" text-anchor="middle" font-family="monospace">systemd (PID 1)</text>
-      <text x="220" y="78" fill="#8b949e" font-size="10" text-anchor="middle" font-family="monospace">UID=0</text>
-      <!-- fork arrows to services -->
-      <line x1="280" y1="65" x2="310" y2="65" stroke="#8b949e" stroke-width="1.5" marker-end="url(#uarr)"/>
-      <!-- services box -->
-      <rect x="310" y="15" width="430" height="110" fill="#161b22" stroke="#30363d" rx="4"/>
-      <text x="525" y="32" fill="#8b949e" font-size="10" text-anchor="middle" font-family="monospace">systemd spawns services</text>
-      <!-- good services with low UIDs -->
-      <rect x="320" y="40" width="130" height="35" fill="#1a2d1a" stroke="#3fb950" rx="3"/>
-      <text x="385" y="57" fill="#3fb950" font-size="10" text-anchor="middle" font-family="monospace">ota_daemon</text>
-      <text x="385" y="70" fill="#8b949e" font-size="10" text-anchor="middle" font-family="monospace">UID=100 (ota_user)</text>
-      <rect x="460" y="40" width="130" height="35" fill="#1a2d1a" stroke="#3fb950" rx="3"/>
-      <text x="525" y="57" fill="#3fb950" font-size="10" text-anchor="middle" font-family="monospace">can_gateway</text>
-      <text x="525" y="70" fill="#8b949e" font-size="10" text-anchor="middle" font-family="monospace">UID=101 (can_gw)</text>
-      <rect x="600" y="40" width="130" height="35" fill="#2d2a1a" stroke="#d29922" rx="3"/>
-      <text x="665" y="57" fill="#d29922" font-size="10" text-anchor="middle" font-family="monospace">legacy_service</text>
-      <text x="665" y="70" fill="#f85149" font-size="10" text-anchor="middle" font-family="monospace">UID=0 ← BAD</text>
-      <!-- note -->
-      <text x="525" y="110" fill="#8b949e" font-size="9" text-anchor="middle" font-family="monospace">systemd Unit: User=ota_user drops UID before exec via setuid() syscall</text>
+      <rect x="195" y="60" width="140" height="60" fill="#ddf4ff" stroke="#54aeff" stroke-width="1.5" rx="6"/>
+      <text x="265" y="80" fill="#0969da" font-size="12" text-anchor="middle" font-weight="700">systemd</text>
+      <text x="265" y="95" fill="#656d76" font-size="10" text-anchor="middle">PID 1</text>
+      <text x="265" y="110" fill="#0969da" font-size="11" text-anchor="middle" font-family="ui-monospace, monospace">UID = 0</text>
+      <line x1="335" y1="90" x2="370" y2="90" stroke="#656d76" stroke-width="1.5" marker-end="url(#uarr)"/>
+      <text x="352" y="78" fill="#656d76" font-size="10" text-anchor="middle">fork+exec</text>
+
+      <!-- service container -->
+      <rect x="370" y="15" width="430" height="170" fill="#f6f8fa" stroke="#d0d7de" stroke-width="1" rx="6"/>
+      <text x="585" y="34" fill="#656d76" font-size="11" text-anchor="middle" font-weight="600">systemd spawns services (drops UID via setuid())</text>
+
+      <rect x="385" y="50" width="130" height="55" fill="#dafbe1" stroke="#4ac26b" stroke-width="1.5" rx="5"/>
+      <text x="450" y="70" fill="#1a7f37" font-size="11" text-anchor="middle" font-weight="700">ota_daemon</text>
+      <text x="450" y="86" fill="#1a7f37" font-size="10" text-anchor="middle" font-family="ui-monospace, monospace">UID = 100</text>
+      <text x="450" y="100" fill="#656d76" font-size="9" text-anchor="middle">(ota_user)</text>
+
+      <rect x="525" y="50" width="130" height="55" fill="#dafbe1" stroke="#4ac26b" stroke-width="1.5" rx="5"/>
+      <text x="590" y="70" fill="#1a7f37" font-size="11" text-anchor="middle" font-weight="700">can_gateway</text>
+      <text x="590" y="86" fill="#1a7f37" font-size="10" text-anchor="middle" font-family="ui-monospace, monospace">UID = 101</text>
+      <text x="590" y="100" fill="#656d76" font-size="9" text-anchor="middle">(can_gw)</text>
+
+      <rect x="665" y="50" width="125" height="55" fill="#ffebe9" stroke="#ff8182" stroke-width="1.5" rx="5"/>
+      <text x="727" y="70" fill="#cf222e" font-size="11" text-anchor="middle" font-weight="700">legacy_svc</text>
+      <text x="727" y="86" fill="#cf222e" font-size="10" text-anchor="middle" font-family="ui-monospace, monospace">UID = 0</text>
+      <text x="727" y="100" fill="#cf222e" font-size="9" text-anchor="middle">⚠ runs as root</text>
+
+      <text x="585" y="140" fill="#656d76" font-size="10.5" text-anchor="middle">systemd unit: <tspan font-family="ui-monospace, monospace" fill="#0969da">User=ota_user</tspan> drops UID before exec</text>
+      <text x="585" y="160" fill="#656d76" font-size="10.5" text-anchor="middle">Without this directive → service inherits UID 0 from systemd (BAD)</text>
     </svg>
+    <div class="svg-caption">UID inheritance from kernel → systemd → services. Good ECUs use dedicated per-service UIDs.</div>
   </div>
 
   <p>In a well-designed ECU, each service has its own dedicated UID. The systemd unit file uses <code>User=ota_user</code> to drop from root to the service account before executing the daemon binary. Even without SELinux, this limits what a compromised daemon can do via DAC. With SELinux, the domain (type) provides the real confinement.</p>
 
-  <!-- 6. SETUID DEEP DIVE -->
   <h2>6 — setuid: DAC's Most Dangerous Feature</h2>
-  <p>The <span class="highlight">setuid bit</span> allows a binary to run with the <em>file owner's privileges</em> rather than the caller's. A setuid binary owned by root runs as root for any user who executes it. This was designed to allow unprivileged users to do specific privileged operations (e.g., changing their own password via <code>/usr/bin/passwd</code>).</p>
+  <p>The <strong>setuid bit</strong> allows a binary to run with the <em>file owner's privileges</em> rather than the caller's. A setuid binary owned by root runs as root for any user who executes it. This was designed to allow unprivileged users to do specific privileged operations (e.g., changing their own password via <code>/usr/bin/passwd</code>).</p>
 
   <div class="analogy">
-    setuid is like a spare master key taped to a locker. Anyone who finds the locker (the setuid binary) can use the master key (run as root) just by opening the locker. If the locker is broken (the binary has a vulnerability), an attacker can grab the master key and open everything. SELinux is a security measure that says "even if you have the master key, you can only open the doors listed in our policy for this specific key."
+    <span class="analogy-label">💡 Analogy</span>
+    setuid is like a spare master key taped to a locker. Anyone who finds the locker (the setuid binary) can use the master key (run as root) just by opening the locker. If the locker is broken (the binary has a vulnerability), an attacker can grab the master key and open everything. SELinux is a security measure that says <em>"even if you have the master key, you can only open the doors listed in our policy for this specific key."</em>
   </div>
 
-  <pre><code># Find all setuid binaries on an ECU
-find / -perm /4000 -type f 2>/dev/null
+<pre><code># Find all setuid binaries on an ECU
+find / -perm /4000 -type f 2&gt;/dev/null
 
 # Good ECU result — minimal or zero setuid binaries:
-# /usr/bin/passwd   (if password login is needed — often removed on headless ECUs)
-# /usr/bin/sudo     (removed on production ECUs)
+#   /usr/bin/passwd   (if password login is needed — often removed on headless ECUs)
+#   /usr/bin/sudo     (removed on production ECUs)
 
 # Bad ECU result:
-# /opt/oem/diag_tool  (setuid root with unknown code — massive risk)</code></pre>
+#   /opt/oem/diag_tool  (setuid root with unknown code — massive risk)</code></pre>
 
-  <!-- 7. ATTACK SCENARIO -->
   <h2>7 — Attack Scenario: setuid Exploit → Root → DAC Bypass → SELinux Blocks</h2>
   <div class="card red">
-    <h3>Scenario: Attacker finds a setuid binary with a stack overflow vulnerability</h3>
-    <p>An ECU ships with a diagnostics tool owned by root with the setuid bit set. An attacker on the OBD-II port exploits a buffer overflow in this tool.</p>
+    <h3>Scenario: Attacker exploits a setuid binary with a stack overflow</h3>
+    <p style="margin-bottom:0">An ECU ships with a diagnostics tool owned by root with the setuid bit set. An attacker on the OBD-II port exploits a buffer overflow in this tool.</p>
   </div>
 
   <div class="attack-step attacker">
     <span class="step-num">1</span>
-    <div>
-      <strong>Attacker connects via OBD-II / UDS interface</strong><br>
+    <div class="step-body">
+      <strong>Attacker connects via OBD-II / UDS interface</strong>
       Using a diagnostic laptop connected to the OBD-II port, attacker sends a malformed UDS service request (0x27 SecurityAccess with oversized seed response) to the diagnostics daemon.
     </div>
   </div>
   <div class="attack-step attacker">
     <span class="step-num">2</span>
-    <div>
-      <strong>Stack overflow → code execution as root (UID=0)</strong><br>
-      The diagnostics binary is setuid root and has a stack overflow. Attacker triggers it, overwriting the return address with shellcode. The shell runs as UID=0 (root) because of setuid. DAC is now bypassed — root can read/write anything.
+    <div class="step-body">
+      <strong>Stack overflow → code execution as root (UID = 0)</strong>
+      The diagnostics binary is setuid root and has a stack overflow. Attacker triggers it, overwriting the return address with shellcode. The shell runs as UID 0 because of setuid. DAC is now bypassed — root can read/write anything.
     </div>
   </div>
   <div class="attack-step attacker">
     <span class="step-num">3</span>
-    <div>
-      <strong>Attempt to read private OTA signing key</strong><br>
+    <div class="step-body">
+      <strong>Attempt to read private OTA signing key</strong>
       Attacker tries: <code>open("/etc/ota/private.key", O_RDONLY)</code>. DAC says: UID=0, file owner=ota_user, permission=<code>r--------</code>. Root bypasses this check. DAC ALLOWS. But…
     </div>
   </div>
   <div class="attack-step selinux">
     <span class="step-num">4</span>
-    <div>
-      <strong>SELinux blocks: wrong domain for this resource</strong><br>
-      The process is still running in the <strong>SELinux domain of the diagnostics tool</strong>: <code>diag_svc_t</code>. SELinux checks: does <code>diag_svc_t</code> have <code>read</code> on <code>ota_key_t</code>? Policy says NO. Kernel returns <code>-EACCES</code>. AVC denial logged with: <code>scontext=diag_svc_t tcontext=ota_key_t tclass=file</code>.
+    <div class="step-body">
+      <strong>SELinux blocks: wrong domain for this resource</strong>
+      The process is still running in the SELinux domain of the diagnostics tool: <code>diag_svc_t</code>. SELinux checks: does <code>diag_svc_t</code> have <code>read</code> on <code>ota_key_t</code>? Policy says NO. Kernel returns <code>-EACCES</code>. AVC denial logged with <code>scontext=diag_svc_t tcontext=ota_key_t tclass=file</code>.
     </div>
   </div>
   <div class="attack-step attacker">
     <span class="step-num">5</span>
-    <div>
-      <strong>Attempt to open CAN socket for frame injection</strong><br>
+    <div class="step-body">
+      <strong>Attempt to open CAN socket for frame injection</strong>
       Attacker tries: <code>socket(AF_CAN, SOCK_RAW, CAN_RAW)</code>. DAC: root can do anything with sockets. DAC ALLOWS. But…
     </div>
   </div>
   <div class="attack-step selinux">
-    <span class="step-num">5</span>
-    <div>
-      <strong>SELinux blocks: diag_svc_t cannot create CAN sockets</strong><br>
+    <span class="step-num">6</span>
+    <div class="step-body">
+      <strong>SELinux blocks: diag_svc_t cannot create CAN sockets</strong>
       SELinux policy does not grant <code>diag_svc_t</code> the <code>create</code> permission on <code>can_socket</code> class. Kernel blocks it. AVC denial logged. The CAN bus is safe.
     </div>
   </div>
   <div class="attack-step system">
-    <span class="step-num">6</span>
-    <div>
-      <strong>Attack contained — V-SOC alerted</strong><br>
+    <span class="step-num">7</span>
+    <div class="step-body">
+      <strong>Attack contained — V-SOC alerted</strong>
       The attacker has root UID but is still confined to the <code>diag_svc_t</code> SELinux domain. They can only access what the diagnostics service is legitimately allowed to access. The OTA keys, CAN bus, and safety partition are untouchable. AVC denials trigger alerts in the Vehicle Security Operations Centre.
     </div>
   </div>
 
-  <!-- 8. DAC vs MAC -->
   <h2>8 — DAC vs MAC: Why SELinux Exists</h2>
   <table>
     <tr><th>Property</th><th>DAC (Traditional Linux)</th><th>MAC (SELinux)</th></tr>
-    <tr><td>Who sets rules</td><td>File owner (discretionary)</td><td>System administrator / policy author (mandatory)</td></tr>
-    <tr><td>Root bypass</td><td>UID=0 bypasses most checks</td><td>UID=0 does NOT bypass SELinux</td></tr>
-    <tr><td>Granularity</td><td>Read / Write / Execute on owner/group/others</td><td>Per-operation, per-type (hundreds of permissions)</td></tr>
+    <tr><td>Who sets the rules</td><td>File owner (discretionary)</td><td>System administrator / policy author (mandatory)</td></tr>
+    <tr><td>Root bypass</td><td>UID = 0 bypasses most checks</td><td>UID = 0 does <strong>NOT</strong> bypass SELinux</td></tr>
+    <tr><td>Granularity</td><td>read/write/execute on owner/group/others</td><td>Per-operation, per-type (hundreds of permissions)</td></tr>
     <tr><td>Compromise impact</td><td>Attacker inherits all owner's permissions</td><td>Attacker confined to current SELinux domain</td></tr>
     <tr><td>Configuration</td><td>chmod, chown on each file</td><td>Policy files compiled and loaded into kernel</td></tr>
     <tr><td>Log on denial</td><td>No logging</td><td>AVC denial logged with full context</td></tr>
     <tr><td>Cross-file tracking</td><td>No — each file independent</td><td>Yes — domain transitions tracked system-wide</td></tr>
   </table>
 
-  <!-- 9. INTRUSION DETECTION -->
   <h2>9 — Intrusion Detection &amp; Forensics</h2>
   <div class="tabs" id="tabs-idf">
-    <button class="tab-btn active" onclick="switchTab('idf','detect')">Detection</button>
-    <button class="tab-btn" onclick="switchTab('idf','forensics')">Forensics</button>
-    <button class="tab-btn" onclick="switchTab('idf','harden')">ECU Hardening</button>
+    <button class="tab-btn active" onclick="switchTab(event,'idf','detect')">Detection</button>
+    <button class="tab-btn" onclick="switchTab(event,'idf','forensics')">Forensics</button>
+    <button class="tab-btn" onclick="switchTab(event,'idf','harden')">ECU Hardening</button>
   </div>
   <div class="tab-panel active" id="idf-detect">
     <p>Signs of privilege escalation or lateral movement visible via DAC + SELinux:</p>
     <ul style="margin-left:1.5rem">
       <li>AVC denial: <code>scontext=diag_svc_t tcontext=ota_key_t tclass=file { read }</code> — diagnostics accessing OTA keys</li>
-      <li>AVC denial: <code>scontext=can_gw_t tcontext=selinux_config_t tclass=file { write }</code> — CAN gateway trying to modify SELinux policy</li>
+      <li>AVC denial: <code>scontext=can_gw_t tcontext=selinux_config_t tclass=file { write }</code> — CAN gateway modifying policy</li>
       <li>Unusual setuid binary execution: <code>ausearch -m AVC -k setuid_exec</code></li>
       <li>Root process in unexpected SELinux domain: <code>ps -Z | grep "diag_svc_t"</code></li>
     </ul>
   </div>
   <div class="tab-panel" id="idf-forensics">
-    <p>Post-incident investigation steps:</p>
-    <pre><code># Find all setuid binaries (potential exploit vectors)
-find / -perm /4000 -ls 2>/dev/null
+    <p>Post-incident investigation:</p>
+<pre><code># Find all setuid binaries (potential exploit vectors)
+find / -perm /4000 -ls 2&gt;/dev/null
 
-# Find files with world-writable permissions (misconfiguration)
-find / -perm -002 -type f -ls 2>/dev/null
+# Find world-writable files (misconfiguration)
+find / -perm -002 -type f -ls 2&gt;/dev/null
 
 # Check SELinux context of suspicious processes
-ps -eZ | grep "unconfined\|unlabeled"
+ps -eZ | grep -E "unconfined|unlabeled"
 
-# Search AVC denials involving UID escalation period
+# Search AVC denials in the last hour
 ausearch -m AVC --start $(date -d '1 hour ago' +%H:%M:%S)
 
-# Check which user a process is running as
-cat /proc/PID/status | grep -E "^(Uid|Gid)"</code></pre>
+# Check effective UID of a running process
+cat /proc/&lt;PID&gt;/status | grep -E "^(Uid|Gid)"</code></pre>
   </div>
   <div class="tab-panel" id="idf-harden">
     <p>ECU DAC hardening checklist (defence-in-depth with SELinux):</p>
     <ul style="margin-left:1.5rem">
       <li>Remove all setuid/setgid binaries not strictly needed (<code>sudo</code>, <code>su</code>, many <code>util-linux</code> tools)</li>
-      <li>Run every daemon as its own dedicated UID (not root)</li>
+      <li>Run every daemon as its own dedicated UID — never root</li>
       <li>Set squashfs rootfs to <code>ro</code> mount option in <code>/etc/fstab</code></li>
-      <li>Set <code>/proc/sys/fs/protected_hardlinks = 1</code> and <code>protected_symlinks = 1</code></li>
-      <li>Enable <code>CONFIG_SECURITY_SELINUX_BOOTPARAM=n</code> — prevent disabling SELinux from kernel cmdline</li>
+      <li>Enable <code>/proc/sys/fs/protected_hardlinks = 1</code> and <code>protected_symlinks = 1</code></li>
+      <li>Set <code>CONFIG_SECURITY_SELINUX_BOOTPARAM=n</code> — prevent disabling SELinux from kernel cmdline</li>
       <li>Use <code>User=</code> and <code>Group=</code> in all systemd unit files</li>
-      <li>Audit <code>/etc/passwd</code> and <code>/etc/shadow</code> for development accounts before production build</li>
+      <li>Audit <code>/etc/passwd</code> and <code>/etc/shadow</code> for dev accounts before production build</li>
     </ul>
   </div>
 
-  <!-- 10. KEY TERMS -->
   <h2>10 — Key Terms</h2>
   <table>
     <tr><th>Term</th><th>Plain Language Definition</th><th>ECU Relevance</th></tr>
     <tr><td><strong>UID</strong></td><td>User ID — numeric identity for a user or service</td><td><code>ota_user</code> = UID 100</td></tr>
-    <tr><td><strong>GID</strong></td><td>Group ID — numeric identity for a group of users</td><td><code>can_group</code> = GID 101, owns <code>/dev/can0</code></td></tr>
+    <tr><td><strong>GID</strong></td><td>Group ID — numeric identity for a group</td><td><code>can_group</code> owns <code>/dev/can0</code></td></tr>
     <tr><td><strong>DAC</strong></td><td>Discretionary Access Control — owner sets permissions</td><td>Traditional Linux rwx model</td></tr>
     <tr><td><strong>MAC</strong></td><td>Mandatory Access Control — system policy enforced centrally</td><td>SELinux is the MAC layer</td></tr>
-    <tr><td><strong>permission bits</strong></td><td>rwx × 3 (owner/group/others) = controls who can read/write/exec</td><td><code>-rw-r-----</code> on <code>private.key</code></td></tr>
+    <tr><td><strong>permission bits</strong></td><td>rwx × 3 (owner/group/others) controls read/write/exec</td><td><code>-rw-r-----</code> on private.key</td></tr>
     <tr><td><strong>setuid</strong></td><td>Binary runs with file owner's UID regardless of caller</td><td>Root-owned setuid = instant root if exploited</td></tr>
-    <tr><td><strong>setgid</strong></td><td>Binary runs with file's GID; or on dir: new files inherit GID</td><td>Less common on ECUs</td></tr>
+    <tr><td><strong>setgid</strong></td><td>Binary runs with file's GID; on dir: new files inherit GID</td><td>Less common on ECUs</td></tr>
     <tr><td><strong>sticky bit</strong></td><td>On a dir: only owner can delete their files</td><td>Used on <code>/tmp</code> on multi-user systems</td></tr>
-    <tr><td><strong>octal notation</strong></td><td>3-digit number representing permission bits (e.g. 755 = rwxr-xr-x)</td><td><code>chmod 640 config.json</code></td></tr>
-    <tr><td><strong>effective UID</strong></td><td>The UID the kernel uses for permission checks (can differ from real UID via setuid)</td><td>Critical for setuid security analysis</td></tr>
+    <tr><td><strong>octal notation</strong></td><td>3-digit number for permission bits (755 = rwxr-xr-x)</td><td><code>chmod 640 config.json</code></td></tr>
+    <tr><td><strong>effective UID</strong></td><td>UID the kernel uses for checks (differs from real UID via setuid)</td><td>Critical for setuid security analysis</td></tr>
   </table>
 
-  <!-- SUMMARY -->
   <h2>11 — Summary</h2>
   <div class="summary-grid">
     <div class="summary-card">
       <div class="icon">🔑</div>
       <div class="label">UIDs / GIDs</div>
-      <div class="value">Numbers the kernel uses; names are human-readable aliases</div>
+      <div class="value">Numbers the kernel uses; names are aliases</div>
     </div>
     <div class="summary-card">
       <div class="icon">🔐</div>
       <div class="label">Permission Bits</div>
-      <div class="value">rwx × 3 — owner, group, others control basic access</div>
+      <div class="value">rwx × 3 — owner, group, others</div>
     </div>
     <div class="summary-card">
       <div class="icon">👑</div>
-      <div class="label">Root (UID=0)</div>
-      <div class="value">Bypasses DAC — but NOT SELinux. Never run daemons as root.</div>
+      <div class="label">Root (UID = 0)</div>
+      <div class="value">Bypasses DAC — but NOT SELinux</div>
     </div>
     <div class="summary-card">
       <div class="icon">⚠️</div>
       <div class="label">setuid</div>
-      <div class="value">Runs with owner's UID — major exploit vector; minimize on ECUs</div>
+      <div class="value">Runs with owner's UID — major exploit vector</div>
     </div>
     <div class="summary-card">
       <div class="icon">🛡️</div>
       <div class="label">SELinux Role</div>
-      <div class="value">Adds mandatory layer — root still confined to its SELinux domain</div>
+      <div class="value">Mandatory layer — root still confined</div>
     </div>
     <div class="summary-card">
       <div class="icon">📋</div>
       <div class="label">Forensics</div>
-      <div class="value">AVC denials reveal DAC-bypass attempts with full context</div>
+      <div class="value">AVC denials reveal DAC-bypass attempts</div>
     </div>
   </div>
 
-  <!-- NAV -->
   <div class="nav-footer">
-    <a href="0-2-linux-filesystem.html"><button class="nav-btn">← 0.2 Linux File System</button></a>
-    <span style="color:var(--muted); font-size:.9rem">Module 0.3 of 73</span>
-    <button class="nav-btn" style="opacity:.4" disabled>Next: 0.4 Processes &amp; Capabilities →</button>
+    <a href="0-2-linux-filesystem.html" class="nav-btn">← 0.2 Linux File System</a>
+    <span class="nav-meta">Module 0.3 of 73</span>
+    <span class="nav-btn disabled">Next: 0.4 Processes &amp; Capabilities →</span>
   </div>
 </main>
 </div>
 
 <script>
-function switchTab(group, id) {
+function switchTab(ev, group, id) {
   document.querySelectorAll('[id^="' + group + '-"]').forEach(p => p.classList.remove('active'));
   document.querySelectorAll('#tabs-' + group + ' .tab-btn').forEach(b => b.classList.remove('active'));
   document.getElementById(group + '-' + id).classList.add('active');
-  event.target.classList.add('active');
+  ev.currentTarget.classList.add('active');
 }
 </script>
 </body>

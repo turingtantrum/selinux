@@ -53,7 +53,15 @@ Each HTML file MUST be:
 - **Readable offline** — open directly in any browser with no internet needed
 - **Rich** — include all of: SVG diagrams, tables, syntax-highlighted code blocks,
   interactive tabs/accordions, visual workflows, attack scenario steps
-- **Dark-themed** — use the dark design system defined in existing files
+- **Light-themed** — white/`#f6f8fa` backgrounds, dark text, GitHub-style soft accent colours
+  (blues `#0969da`/`#ddf4ff`, greens `#1a7f37`/`#dafbe1`, oranges `#9a6700`/`#fff8c5`,
+  reds `#cf222e`/`#ffebe9`, purples `#8250df`/`#fbefff`). NEVER use a dark theme.
+- **Visually QA every SVG** — before declaring a module done, mentally render each
+  diagram: no overlapping text, brackets/lines must align with the elements they point
+  to, labels must have at least 8px clearance from neighbouring labels, every text
+  element must fit inside its bounding box. Use individual `<text>` elements with
+  explicit x/y coordinates rather than relying on `letter-spacing` (which does not
+  align with surrounding rectangles).
 
 ### After writing each HTML file
 

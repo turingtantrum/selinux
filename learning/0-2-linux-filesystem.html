@@ -6,195 +6,257 @@
 <title>0.2 — The Linux File System | SELinux Learning</title>
 <style>
   :root {
-    --bg: #0d1117; --card: #161b22; --border: #30363d;
-    --blue: #58a6ff; --green: #3fb950; --orange: #d29922;
-    --red: #f85149; --purple: #bc8cff; --teal: #39d353;
-    --text: #e6edf3; --muted: #8b949e; --code-bg: #1f2937;
+    --bg: #ffffff;
+    --bg-soft: #f6f8fa;
+    --card: #ffffff;
+    --border: #d0d7de;
+    --border-soft: #eaeef2;
+    --text: #1f2328;
+    --text-muted: #656d76;
+    --blue: #0969da;
+    --blue-soft: #ddf4ff;
+    --blue-border: #54aeff;
+    --green: #1a7f37;
+    --green-soft: #dafbe1;
+    --green-border: #4ac26b;
+    --orange: #9a6700;
+    --orange-soft: #fff8c5;
+    --orange-border: #d4a72c;
+    --red: #cf222e;
+    --red-soft: #ffebe9;
+    --red-border: #ff8182;
+    --purple: #8250df;
+    --purple-soft: #fbefff;
+    --purple-border: #c297ff;
+    --code-bg: #f6f8fa;
   }
   * { box-sizing: border-box; margin: 0; padding: 0; }
   body { background: var(--bg); color: var(--text); font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; line-height: 1.7; }
   a { color: var(--blue); text-decoration: none; }
-  h1 { font-size: 2rem; color: var(--blue); margin-bottom: .25rem; }
-  h2 { font-size: 1.3rem; color: var(--blue); margin: 1.5rem 0 .75rem; border-left: 3px solid var(--blue); padding-left: .75rem; }
-  h3 { font-size: 1.05rem; color: var(--orange); margin: 1rem 0 .5rem; }
-  p { margin-bottom: .85rem; }
-  code { background: var(--code-bg); color: var(--green); padding: .15em .4em; border-radius: 4px; font-family: 'Fira Code', monospace; font-size: .9em; }
-  pre { background: var(--code-bg); border: 1px solid var(--border); border-radius: 8px; padding: 1.2rem; overflow-x: auto; margin: 1rem 0; }
-  pre code { background: none; padding: 0; font-size: .88rem; color: #e6edf3; }
-  .layout { display: grid; grid-template-columns: 240px 1fr; min-height: 100vh; }
-  .sidebar { background: var(--card); border-right: 1px solid var(--border); padding: 1.5rem 1rem; position: sticky; top: 0; height: 100vh; overflow-y: auto; }
-  .sidebar h3 { color: var(--muted); font-size: .75rem; text-transform: uppercase; letter-spacing: .08em; margin-bottom: .5rem; }
+  a:hover { text-decoration: underline; }
+  h1 { font-size: 2rem; color: var(--text); margin-bottom: .35rem; font-weight: 700; }
+  h2 { font-size: 1.3rem; color: var(--text); margin: 2rem 0 .85rem; padding-left: .85rem; border-left: 4px solid var(--blue); font-weight: 600; }
+  h3 { font-size: 1.05rem; color: var(--text); margin: 1.1rem 0 .55rem; font-weight: 600; }
+  p { margin-bottom: .9rem; color: var(--text); }
+  code { background: var(--code-bg); color: var(--text); padding: .15em .4em; border-radius: 4px; font-family: 'SF Mono', Monaco, 'Cascadia Code', monospace; font-size: .88em; border: 1px solid var(--border-soft); }
+  pre { background: var(--code-bg); border: 1px solid var(--border); border-radius: 8px; padding: 1.1rem 1.25rem; overflow-x: auto; margin: 1rem 0; }
+  pre code { background: none; padding: 0; font-size: .87rem; color: var(--text); border: none; }
+  .layout { display: grid; grid-template-columns: 260px 1fr; min-height: 100vh; }
+  .sidebar { background: var(--bg-soft); border-right: 1px solid var(--border); padding: 1.75rem 1rem; position: sticky; top: 0; height: 100vh; overflow-y: auto; }
+  .sidebar h3 { color: var(--text-muted); font-size: .72rem; text-transform: uppercase; letter-spacing: .08em; margin: 0 0 .6rem .5rem; font-weight: 600; }
   .sidebar ul { list-style: none; }
-  .sidebar li { margin-bottom: .2rem; }
-  .sidebar a { color: var(--muted); font-size: .88rem; display: block; padding: .3rem .5rem; border-radius: 4px; }
-  .sidebar a:hover { background: var(--border); color: var(--text); }
-  .sidebar a.active { background: #1c3a5e; color: var(--blue); font-weight: 600; }
-  .sidebar .done { color: var(--green); }
-  .sidebar .done::before { content: '✓ '; }
-  .main { padding: 2.5rem 3rem; max-width: 900px; }
-  .phase-badge { display: inline-block; background: #1c3a5e; color: var(--blue); padding: .3rem .8rem; border-radius: 20px; font-size: .8rem; font-weight: 600; margin-bottom: 1rem; }
-  .card { background: var(--card); border: 1px solid var(--border); border-radius: 10px; padding: 1.5rem; margin: 1.25rem 0; }
-  .card.green { border-color: #238636; }
-  .card.orange { border-color: #9e6a03; }
-  .card.red { border-color: #6e1a1a; }
-  .card.purple { border-color: #6e40c9; }
-  .analogy { background: #161b22; border: 1px solid #9e6a03; border-left: 4px solid var(--orange); border-radius: 8px; padding: 1.2rem 1.5rem; margin: 1.25rem 0; }
-  .analogy::before { content: '💡 Analogy '; font-weight: 700; color: var(--orange); display: block; margin-bottom: .5rem; font-size: .85rem; text-transform: uppercase; letter-spacing: .05em; }
-  .tabs { display: flex; gap: .5rem; margin-bottom: 0; flex-wrap: wrap; }
-  .tab-btn { background: var(--card); border: 1px solid var(--border); color: var(--muted); padding: .5rem 1.1rem; border-radius: 6px 6px 0 0; cursor: pointer; font-size: .9rem; transition: all .2s; }
-  .tab-btn.active { background: #1c3a5e; color: var(--blue); border-color: var(--blue); border-bottom-color: #1c3a5e; }
-  .tab-panel { display: none; background: var(--card); border: 1px solid var(--border); border-radius: 0 8px 8px 8px; padding: 1.5rem; }
+  .sidebar li { margin-bottom: .15rem; }
+  .sidebar a { color: var(--text); font-size: .87rem; display: block; padding: .42rem .6rem; border-radius: 6px; }
+  .sidebar a:hover { background: var(--border-soft); text-decoration: none; }
+  .sidebar a.active { background: var(--blue-soft); color: var(--blue); font-weight: 600; }
+  .sidebar a.done::before { content: '✓ '; color: var(--green); font-weight: 700; }
+  .sidebar a.pending { color: var(--text-muted); }
+  .main { padding: 2.5rem 3rem; max-width: 980px; }
+  .phase-badge { display: inline-block; background: var(--blue-soft); color: var(--blue); padding: .3rem .85rem; border-radius: 20px; font-size: .78rem; font-weight: 600; margin-bottom: 1rem; border: 1px solid var(--blue-border); }
+  .lead { color: var(--text-muted); margin-bottom: 1.75rem; font-size: .95rem; }
+
+  .card { background: var(--card); border: 1px solid var(--border); border-radius: 10px; padding: 1.3rem 1.5rem; margin: 1.25rem 0; }
+  .card.green { background: var(--green-soft); border-color: var(--green-border); }
+  .card.orange { background: var(--orange-soft); border-color: var(--orange-border); }
+  .card.red { background: var(--red-soft); border-color: var(--red-border); }
+  .card.blue { background: var(--blue-soft); border-color: var(--blue-border); }
+  .card h3 { margin-top: 0; }
+
+  .analogy { background: var(--orange-soft); border: 1px solid var(--orange-border); border-left: 4px solid var(--orange); border-radius: 8px; padding: 1.1rem 1.4rem; margin: 1.25rem 0; }
+  .analogy-label { font-weight: 700; color: var(--orange); display: block; margin-bottom: .45rem; font-size: .8rem; text-transform: uppercase; letter-spacing: .06em; }
+
+  .tabs { display: flex; gap: 4px; margin-bottom: -1px; flex-wrap: wrap; }
+  .tab-btn { background: var(--bg-soft); border: 1px solid var(--border); color: var(--text-muted); padding: .55rem 1.1rem; border-radius: 6px 6px 0 0; cursor: pointer; font-size: .88rem; transition: all .15s; font-family: inherit; }
+  .tab-btn:hover { color: var(--text); }
+  .tab-btn.active { background: var(--card); color: var(--blue); border-color: var(--border); border-bottom-color: var(--card); font-weight: 600; }
+  .tab-panel { display: none; background: var(--card); border: 1px solid var(--border); border-radius: 0 8px 8px 8px; padding: 1.4rem 1.5rem; }
   .tab-panel.active { display: block; }
-  table { width: 100%; border-collapse: collapse; margin: 1rem 0; }
-  th { background: #1c3a5e; color: var(--blue); padding: .7rem 1rem; text-align: left; font-size: .88rem; }
-  td { padding: .65rem 1rem; border-bottom: 1px solid var(--border); font-size: .9rem; vertical-align: top; }
-  tr:hover td { background: #161b22; }
-  .attack-step { display: flex; gap: 1rem; align-items: flex-start; padding: .8rem 1rem; border-radius: 6px; margin: .5rem 0; }
-  .attack-step.attacker { background: #2d1b1b; border-left: 3px solid var(--red); }
-  .attack-step.system { background: #1b2d1b; border-left: 3px solid var(--green); }
-  .attack-step.selinux { background: #1b1b2d; border-left: 3px solid var(--blue); }
-  .step-num { font-weight: 700; font-size: 1.1rem; min-width: 2rem; }
+  .tab-panel:first-child { border-top-left-radius: 0; }
+
+  table { width: 100%; border-collapse: collapse; margin: 1rem 0; background: var(--card); border: 1px solid var(--border); border-radius: 8px; overflow: hidden; }
+  th { background: var(--bg-soft); color: var(--text); padding: .75rem 1rem; text-align: left; font-size: .85rem; font-weight: 600; border-bottom: 1px solid var(--border); }
+  td { padding: .7rem 1rem; border-bottom: 1px solid var(--border-soft); font-size: .9rem; vertical-align: top; color: var(--text); }
+  tr:last-child td { border-bottom: none; }
+  tr:hover td { background: var(--bg-soft); }
+
+  .attack-step { display: flex; gap: 1rem; align-items: flex-start; padding: .9rem 1.1rem; border-radius: 8px; margin: .55rem 0; border: 1px solid; }
+  .attack-step.attacker { background: var(--red-soft); border-color: var(--red-border); }
+  .attack-step.system { background: var(--green-soft); border-color: var(--green-border); }
+  .attack-step.selinux { background: var(--blue-soft); border-color: var(--blue-border); }
+  .step-num { font-weight: 700; font-size: 1.15rem; min-width: 2rem; text-align: center; }
   .attacker .step-num { color: var(--red); }
   .system .step-num { color: var(--green); }
   .selinux .step-num { color: var(--blue); }
-  .summary-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 1rem; margin: 1rem 0; }
-  .summary-card { background: var(--card); border: 1px solid var(--border); border-radius: 8px; padding: 1.1rem; text-align: center; }
-  .summary-card .icon { font-size: 2rem; margin-bottom: .5rem; }
-  .summary-card .label { font-size: .8rem; color: var(--muted); text-transform: uppercase; letter-spacing: .05em; }
-  .summary-card .value { font-size: 1rem; color: var(--text); margin-top: .25rem; font-weight: 500; }
-  .nav-footer { display: flex; justify-content: space-between; align-items: center; padding: 2rem 0 1rem; border-top: 1px solid var(--border); margin-top: 2.5rem; }
-  .nav-btn { background: var(--card); border: 1px solid var(--border); color: var(--text); padding: .7rem 1.4rem; border-radius: 6px; cursor: pointer; font-size: .9rem; transition: all .2s; }
-  .nav-btn:hover { background: #1c3a5e; border-color: var(--blue); color: var(--blue); }
+  .step-body { flex: 1; }
+  .step-body strong { display: block; margin-bottom: .25rem; }
+
+  .summary-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 1rem; margin: 1rem 0; }
+  .summary-card { background: var(--card); border: 1px solid var(--border); border-radius: 8px; padding: 1.2rem; text-align: center; }
+  .summary-card .icon { font-size: 1.8rem; margin-bottom: .5rem; }
+  .summary-card .label { font-size: .75rem; color: var(--text-muted); text-transform: uppercase; letter-spacing: .06em; font-weight: 600; }
+  .summary-card .value { font-size: .92rem; color: var(--text); margin-top: .4rem; line-height: 1.5; }
+
+  .nav-footer { display: flex; justify-content: space-between; align-items: center; padding: 2rem 0 1rem; border-top: 1px solid var(--border); margin-top: 2.5rem; gap: 1rem; }
+  .nav-btn { background: var(--card); border: 1px solid var(--border); color: var(--text); padding: .7rem 1.3rem; border-radius: 6px; cursor: pointer; font-size: .9rem; transition: all .15s; font-family: inherit; text-decoration: none; display: inline-block; }
+  .nav-btn:hover { background: var(--blue-soft); border-color: var(--blue-border); color: var(--blue); text-decoration: none; }
   .nav-btn.disabled { opacity: .4; pointer-events: none; }
-  .highlight { color: var(--blue); font-weight: 600; }
-  .highlight.green { color: var(--green); }
-  .highlight.red { color: var(--red); }
-  .highlight.orange { color: var(--orange); }
+  .nav-meta { color: var(--text-muted); font-size: .85rem; }
+
   .svg-wrap { background: var(--card); border: 1px solid var(--border); border-radius: 10px; padding: 1.5rem; margin: 1.25rem 0; overflow-x: auto; }
-  .xattr-row { display: flex; align-items: center; gap: .75rem; background: var(--code-bg); border-radius: 6px; padding: .7rem 1rem; margin: .4rem 0; font-family: monospace; font-size: .9rem; }
-  .xattr-key { color: var(--orange); min-width: 180px; }
+  .svg-wrap svg { display: block; max-width: 100%; height: auto; }
+  .svg-caption { text-align: center; color: var(--text-muted); font-size: .85rem; margin-top: .75rem; font-style: italic; }
+
+  .xattr-row { display: flex; align-items: center; gap: 1rem; background: var(--code-bg); border: 1px solid var(--border-soft); border-radius: 6px; padding: .7rem 1rem; margin: .4rem 0; font-family: 'SF Mono', Monaco, monospace; font-size: .88rem; }
+  .xattr-key { color: var(--orange); min-width: 180px; font-weight: 600; }
   .xattr-val { color: var(--green); }
 </style>
 </head>
 <body>
 <div class="layout">
 
-<!-- SIDEBAR -->
 <nav class="sidebar">
   <h3>Phase 0 — Linux Foundations</h3>
   <ul>
     <li><a href="0-1-how-linux-works.html" class="done">0.1 How Linux Really Works</a></li>
     <li><a href="0-2-linux-filesystem.html" class="active done">0.2 The Linux File System</a></li>
-    <li><a href="0-3-users-groups-dac.html">0.3 Users, Groups &amp; DAC</a></li>
-    <li><a href="#" style="opacity:.4">0.4 Processes &amp; Capabilities</a></li>
-    <li><a href="#" style="opacity:.4">0.5 Boot Sequence</a></li>
+    <li><a href="0-3-users-groups-dac.html" class="done">0.3 Users, Groups &amp; DAC</a></li>
+    <li><a class="pending">0.4 Processes &amp; Capabilities</a></li>
+    <li><a class="pending">0.5 Boot Sequence</a></li>
   </ul>
   <h3 style="margin-top:1.5rem">Phase 1 — SELinux Concepts</h3>
   <ul>
-    <li><a href="#" style="opacity:.4">1.1 What SELinux Is</a></li>
-    <li><a href="#" style="opacity:.4">1.2 Labels &amp; Contexts</a></li>
-    <li><a href="#" style="opacity:.4">1.3 Type Enforcement</a></li>
-    <li><a href="#" style="opacity:.4">1.4 Roles &amp; Users</a></li>
-    <li><a href="#" style="opacity:.4">1.5 MLS &amp; MCS</a></li>
-    <li><a href="#" style="opacity:.4">1.6 Permissive vs Enforcing</a></li>
-    <li><a href="#" style="opacity:.4">1.7 AVC &amp; Audit</a></li>
+    <li><a class="pending">1.1 What SELinux Is</a></li>
+    <li><a class="pending">1.2 Labels &amp; Contexts</a></li>
+    <li><a class="pending">1.3 Type Enforcement</a></li>
+    <li><a class="pending">1.4 Roles &amp; Users</a></li>
+    <li><a class="pending">1.5 MLS &amp; MCS</a></li>
+    <li><a class="pending">1.6 Permissive vs Enforcing</a></li>
+    <li><a class="pending">1.7 AVC &amp; Audit</a></li>
   </ul>
 </nav>
 
-<!-- MAIN CONTENT -->
 <main class="main">
   <div class="phase-badge">Phase 0 · Module 0.2</div>
   <h1>The Linux File System: Everything Is a File</h1>
-  <p style="color:var(--muted); margin-bottom:1.5rem">Directory Tree · 7 File Types · inodes · xattrs · squashfs · genfscon · SELinux Labels</p>
+  <p class="lead">Directory Tree · 7 File Types · inodes · xattrs · squashfs · genfscon · SELinux Labels</p>
 
-  <!-- 1. WHY -->
   <h2>1 — Why Do We Need to Understand This?</h2>
-  <p>SELinux labels are stored <em>on files and directories</em>. Every single object the kernel manages — regular files, device nodes, sockets, pipes, directories — is represented as a file in the Linux VFS (Virtual File System). That means <span class="highlight">SELinux must label every one of them</span>.</p>
+  <p>SELinux labels are stored <em>on files and directories</em>. Every single object the kernel manages — regular files, device nodes, sockets, pipes, directories — is represented as a file in the Linux VFS (Virtual File System). That means <strong>SELinux must label every one of them</strong>.</p>
   <p>On an automotive ECU running a read-only squashfs rootfs on an ARMv8 SoC, understanding how the file system works tells you exactly where SELinux labels live, how they survive a reboot, and what happens when a new file is created in a tmpfs at runtime.</p>
+
   <div class="analogy">
+    <span class="analogy-label">💡 Analogy</span>
     Linux treats everything as a file the way a city treats everything as an address. Buildings (regular files), pipes (named pipes), traffic cameras (device nodes), radio towers (sockets) — they all have an address. The city postal service (VFS) knows how to route requests to each one. SELinux is the city zoning board: every address has a zoning label, and the board decides which types of vehicles can visit which zones.
   </div>
 
-  <!-- 2. DIRECTORY TREE -->
   <h2>2 — The Directory Tree: The /root of Everything</h2>
-  <p>Linux has a single directory tree rooted at <code>/</code>. There are no drive letters. Every storage device (eMMC partition, SD card, tmpfs) is <em>mounted</em> into this tree at a chosen location called a <span class="highlight">mount point</span>.</p>
+  <p>Linux has a single directory tree rooted at <code>/</code>. There are no drive letters. Every storage device (eMMC partition, SD card, tmpfs) is <em>mounted</em> into this tree at a chosen location called a <strong>mount point</strong>.</p>
 
   <div class="svg-wrap">
-    <svg viewBox="0 0 760 320" xmlns="http://www.w3.org/2000/svg" style="width:100%;max-width:760px">
-      <rect width="760" height="320" fill="#0d1117" rx="8"/>
-      <defs>
-        <marker id="tarr" markerWidth="6" markerHeight="6" refX="5" refY="3" orient="auto">
-          <path d="M0,0 L0,6 L6,3 z" fill="#30363d"/>
-        </marker>
-      </defs>
-      <!-- root -->
-      <rect x="330" y="10" width="100" height="34" fill="#1c3a5e" stroke="#58a6ff" rx="4"/>
-      <text x="380" y="32" fill="#58a6ff" font-size="13" text-anchor="middle" font-family="monospace" font-weight="bold">/  (root)</text>
-      <!-- lines from root -->
-      <line x1="380" y1="44" x2="380" y2="60" stroke="#30363d" stroke-width="1.5"/>
-      <line x1="70" y1="60" x2="690" y2="60" stroke="#30363d" stroke-width="1.5"/>
+    <svg viewBox="0 0 820 460" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="Linux directory tree on an ECU">
+      <!-- Title -->
+      <text x="410" y="22" fill="#1f2328" font-size="13" text-anchor="middle" font-weight="700">ECU Linux Directory Tree (mount points)</text>
+
+      <!-- Root -->
+      <rect x="350" y="40" width="120" height="40" fill="#ddf4ff" stroke="#54aeff" stroke-width="1.5" rx="6"/>
+      <text x="410" y="65" fill="#0969da" font-size="14" text-anchor="middle" font-family="ui-monospace, Menlo, monospace" font-weight="700">/  (root)</text>
+
+      <!-- Lines down to children -->
+      <line x1="410" y1="80" x2="410" y2="100" stroke="#656d76" stroke-width="1.2"/>
+      <line x1="80" y1="100" x2="740" y2="100" stroke="#656d76" stroke-width="1.2"/>
+
+      <!-- Children: /bin /dev /etc /proc /sys /tmp /usr -->
+      <!-- 7 children spaced evenly -->
+      <!-- positions: 80, 190, 300, 410, 520, 630, 740 (centers) -->
+
       <!-- /bin -->
-      <line x1="70" y1="60" x2="70" y2="80" stroke="#30363d" stroke-width="1.5"/>
-      <rect x="25" y="80" width="90" height="30" fill="#1a2d1a" stroke="#3fb950" rx="3"/>
-      <text x="70" y="100" fill="#3fb950" font-size="11" text-anchor="middle" font-family="monospace">/bin</text>
+      <line x1="80" y1="100" x2="80" y2="120" stroke="#656d76" stroke-width="1.2"/>
+      <rect x="35" y="120" width="90" height="32" fill="#dafbe1" stroke="#4ac26b" stroke-width="1.5" rx="4"/>
+      <text x="80" y="142" fill="#1a7f37" font-size="12" text-anchor="middle" font-family="ui-monospace, Menlo, monospace">/bin</text>
+
       <!-- /dev -->
-      <line x1="160" y1="60" x2="160" y2="80" stroke="#30363d" stroke-width="1.5"/>
-      <rect x="115" y="80" width="90" height="30" fill="#2d2a1a" stroke="#d29922" rx="3"/>
-      <text x="160" y="100" fill="#d29922" font-size="11" text-anchor="middle" font-family="monospace">/dev</text>
+      <line x1="190" y1="100" x2="190" y2="120" stroke="#656d76" stroke-width="1.2"/>
+      <rect x="145" y="120" width="90" height="32" fill="#fff8c5" stroke="#d4a72c" stroke-width="1.5" rx="4"/>
+      <text x="190" y="142" fill="#9a6700" font-size="12" text-anchor="middle" font-family="ui-monospace, Menlo, monospace">/dev</text>
+
       <!-- /etc -->
-      <line x1="250" y1="60" x2="250" y2="80" stroke="#30363d" stroke-width="1.5"/>
-      <rect x="205" y="80" width="90" height="30" fill="#1c3a5e" stroke="#58a6ff" rx="3"/>
-      <text x="250" y="100" fill="#58a6ff" font-size="11" text-anchor="middle" font-family="monospace">/etc</text>
+      <line x1="300" y1="100" x2="300" y2="120" stroke="#656d76" stroke-width="1.2"/>
+      <rect x="255" y="120" width="90" height="32" fill="#ddf4ff" stroke="#54aeff" stroke-width="1.5" rx="4"/>
+      <text x="300" y="142" fill="#0969da" font-size="12" text-anchor="middle" font-family="ui-monospace, Menlo, monospace">/etc</text>
+
       <!-- /proc -->
-      <line x1="340" y1="60" x2="340" y2="80" stroke="#30363d" stroke-width="1.5"/>
-      <rect x="295" y="80" width="90" height="30" fill="#2d1a2d" stroke="#bc8cff" rx="3"/>
-      <text x="340" y="100" fill="#bc8cff" font-size="11" text-anchor="middle" font-family="monospace">/proc</text>
+      <line x1="410" y1="100" x2="410" y2="120" stroke="#656d76" stroke-width="1.2"/>
+      <rect x="365" y="120" width="90" height="32" fill="#fbefff" stroke="#c297ff" stroke-width="1.5" rx="4"/>
+      <text x="410" y="142" fill="#8250df" font-size="12" text-anchor="middle" font-family="ui-monospace, Menlo, monospace">/proc</text>
+
       <!-- /sys -->
-      <line x1="430" y1="60" x2="430" y2="80" stroke="#30363d" stroke-width="1.5"/>
-      <rect x="385" y="80" width="90" height="30" fill="#2d1a2d" stroke="#bc8cff" rx="3"/>
-      <text x="430" y="100" fill="#bc8cff" font-size="11" text-anchor="middle" font-family="monospace">/sys</text>
+      <line x1="520" y1="100" x2="520" y2="120" stroke="#656d76" stroke-width="1.2"/>
+      <rect x="475" y="120" width="90" height="32" fill="#fbefff" stroke="#c297ff" stroke-width="1.5" rx="4"/>
+      <text x="520" y="142" fill="#8250df" font-size="12" text-anchor="middle" font-family="ui-monospace, Menlo, monospace">/sys</text>
+
       <!-- /tmp -->
-      <line x1="520" y1="60" x2="520" y2="80" stroke="#30363d" stroke-width="1.5"/>
-      <rect x="475" y="80" width="90" height="30" fill="#1a2d2d" stroke="#39d353" rx="3"/>
-      <text x="520" y="100" fill="#39d353" font-size="11" text-anchor="middle" font-family="monospace">/tmp</text>
+      <line x1="630" y1="100" x2="630" y2="120" stroke="#656d76" stroke-width="1.2"/>
+      <rect x="585" y="120" width="90" height="32" fill="#dafbe1" stroke="#4ac26b" stroke-width="1.5" rx="4"/>
+      <text x="630" y="142" fill="#1a7f37" font-size="12" text-anchor="middle" font-family="ui-monospace, Menlo, monospace">/tmp</text>
+
       <!-- /usr -->
-      <line x1="610" y1="60" x2="610" y2="80" stroke="#30363d" stroke-width="1.5"/>
-      <rect x="565" y="80" width="90" height="30" fill="#1a2d1a" stroke="#3fb950" rx="3"/>
-      <text x="610" y="100" fill="#3fb950" font-size="11" text-anchor="middle" font-family="monospace">/usr</text>
-      <!-- second level -- /etc children -->
-      <line x1="250" y1="110" x2="250" y2="130" stroke="#30363d" stroke-width="1"/>
-      <line x1="210" y1="130" x2="290" y2="130" stroke="#30363d" stroke-width="1"/>
-      <line x1="210" y1="130" x2="210" y2="150" stroke="#30363d" stroke-width="1"/>
-      <rect x="160" y="150" width="100" height="25" fill="#161b22" stroke="#30363d" rx="3"/>
-      <text x="210" y="167" fill="#8b949e" font-size="10" text-anchor="middle" font-family="monospace">/etc/ota/</text>
-      <line x1="290" y1="130" x2="290" y2="150" stroke="#30363d" stroke-width="1"/>
-      <rect x="240" y="150" width="100" height="25" fill="#161b22" stroke="#30363d" rx="3"/>
-      <text x="290" y="167" fill="#8b949e" font-size="10" text-anchor="middle" font-family="monospace">/etc/selinux/</text>
-      <!-- /dev children -->
-      <line x1="160" y1="110" x2="160" y2="130" stroke="#30363d" stroke-width="1"/>
-      <line x1="120" y1="130" x2="200" y2="130" stroke="#30363d" stroke-width="1"/>
-      <line x1="120" y1="130" x2="120" y2="150" stroke="#30363d" stroke-width="1"/>
-      <rect x="70" y="150" width="100" height="25" fill="#161b22" stroke="#30363d" rx="3"/>
-      <text x="120" y="167" fill="#8b949e" font-size="10" text-anchor="middle" font-family="monospace">/dev/can0</text>
-      <line x1="200" y1="130" x2="200" y2="150" stroke="#30363d" stroke-width="1"/>
-      <rect x="150" y="150" width="100" height="25" fill="#161b22" stroke="#30363d" rx="3"/>
-      <text x="200" y="167" fill="#8b949e" font-size="10" text-anchor="middle" font-family="monospace">/dev/tpm0</text>
-      <!-- legend -->
-      <rect x="20" y="220" width="720" height="90" fill="#161b22" stroke="#30363d" rx="6"/>
-      <text x="380" y="240" fill="#8b949e" font-size="11" text-anchor="middle" font-family="monospace">ECU Mount Points</text>
-      <text x="30" y="260" fill="#3fb950" font-size="10" font-family="monospace">/  (squashfs, read-only)</text>
-      <text x="30" y="278" fill="#d29922" font-size="10" font-family="monospace">/dev  (devtmpfs, virtual)</text>
-      <text x="30" y="296" fill="#bc8cff" font-size="10" font-family="monospace">/proc  (procfs, virtual)</text>
-      <text x="260" y="260" fill="#bc8cff" font-size="10" font-family="monospace">/sys  (sysfs, virtual)</text>
-      <text x="260" y="278" fill="#39d353" font-size="10" font-family="monospace">/tmp  (tmpfs, RAM, lost on reboot)</text>
-      <text x="260" y="296" fill="#58a6ff" font-size="10" font-family="monospace">/data  (ext4, writable persistent)</text>
-      <text x="500" y="260" fill="#8b949e" font-size="10" font-family="monospace">/run  (tmpfs, runtime state)</text>
-      <text x="500" y="278" fill="#8b949e" font-size="10" font-family="monospace">/var  (overlay or bind mount)</text>
-      <text x="500" y="296" fill="#8b949e" font-size="10" font-family="monospace">/boot  (vfat, bootloader files)</text>
+      <line x1="740" y1="100" x2="740" y2="120" stroke="#656d76" stroke-width="1.2"/>
+      <rect x="695" y="120" width="90" height="32" fill="#dafbe1" stroke="#4ac26b" stroke-width="1.5" rx="4"/>
+      <text x="740" y="142" fill="#1a7f37" font-size="12" text-anchor="middle" font-family="ui-monospace, Menlo, monospace">/usr</text>
+
+      <!-- Sub-level under /etc -->
+      <line x1="300" y1="152" x2="300" y2="172" stroke="#d0d7de" stroke-width="1"/>
+      <line x1="260" y1="172" x2="340" y2="172" stroke="#d0d7de" stroke-width="1"/>
+      <line x1="260" y1="172" x2="260" y2="190" stroke="#d0d7de" stroke-width="1"/>
+      <line x1="340" y1="172" x2="340" y2="190" stroke="#d0d7de" stroke-width="1"/>
+      <rect x="210" y="190" width="100" height="26" fill="#f6f8fa" stroke="#d0d7de" stroke-width="1" rx="3"/>
+      <text x="260" y="208" fill="#656d76" font-size="10.5" text-anchor="middle" font-family="ui-monospace, Menlo, monospace">/etc/ota/</text>
+      <rect x="290" y="190" width="100" height="26" fill="#f6f8fa" stroke="#d0d7de" stroke-width="1" rx="3"/>
+      <text x="340" y="208" fill="#656d76" font-size="10.5" text-anchor="middle" font-family="ui-monospace, Menlo, monospace">/etc/selinux/</text>
+
+      <!-- Sub-level under /dev -->
+      <line x1="190" y1="152" x2="190" y2="172" stroke="#d0d7de" stroke-width="1"/>
+      <line x1="150" y1="172" x2="230" y2="172" stroke="#d0d7de" stroke-width="1"/>
+      <line x1="150" y1="172" x2="150" y2="190" stroke="#d0d7de" stroke-width="1"/>
+      <line x1="230" y1="172" x2="230" y2="190" stroke="#d0d7de" stroke-width="1"/>
+      <rect x="100" y="190" width="100" height="26" fill="#f6f8fa" stroke="#d0d7de" stroke-width="1" rx="3"/>
+      <text x="150" y="208" fill="#656d76" font-size="10.5" text-anchor="middle" font-family="ui-monospace, Menlo, monospace">/dev/can0</text>
+      <rect x="180" y="190" width="100" height="26" fill="#f6f8fa" stroke="#d0d7de" stroke-width="1" rx="3"/>
+      <text x="230" y="208" fill="#656d76" font-size="10.5" text-anchor="middle" font-family="ui-monospace, Menlo, monospace">/dev/tpm0</text>
+
+      <!-- Legend -->
+      <rect x="40" y="250" width="740" height="200" fill="#f6f8fa" stroke="#d0d7de" stroke-width="1.5" rx="8"/>
+      <text x="410" y="275" fill="#1f2328" font-size="12" text-anchor="middle" font-weight="700">Mount Points on a Typical ECU</text>
+      <line x1="60" y1="285" x2="760" y2="285" stroke="#d0d7de" stroke-width="1"/>
+
+      <!-- Legend rows -->
+      <circle cx="75" cy="305" r="5" fill="#dafbe1" stroke="#4ac26b" stroke-width="1.5"/>
+      <text x="90" y="310" fill="#1f2328" font-size="11" font-family="ui-monospace, Menlo, monospace">/</text>
+      <text x="115" y="310" fill="#656d76" font-size="11">— squashfs, read-only (firmware partition)</text>
+
+      <circle cx="75" cy="330" r="5" fill="#fff8c5" stroke="#d4a72c" stroke-width="1.5"/>
+      <text x="90" y="335" fill="#1f2328" font-size="11" font-family="ui-monospace, Menlo, monospace">/dev</text>
+      <text x="125" y="335" fill="#656d76" font-size="11">— devtmpfs, virtual (kernel-managed device nodes)</text>
+
+      <circle cx="75" cy="355" r="5" fill="#fbefff" stroke="#c297ff" stroke-width="1.5"/>
+      <text x="90" y="360" fill="#1f2328" font-size="11" font-family="ui-monospace, Menlo, monospace">/proc, /sys</text>
+      <text x="170" y="360" fill="#656d76" font-size="11">— procfs / sysfs, virtual (kernel state exposed as files)</text>
+
+      <circle cx="75" cy="380" r="5" fill="#dafbe1" stroke="#4ac26b" stroke-width="1.5"/>
+      <text x="90" y="385" fill="#1f2328" font-size="11" font-family="ui-monospace, Menlo, monospace">/tmp, /run</text>
+      <text x="165" y="385" fill="#656d76" font-size="11">— tmpfs, RAM-only (lost on reboot)</text>
+
+      <circle cx="75" cy="405" r="5" fill="#ddf4ff" stroke="#54aeff" stroke-width="1.5"/>
+      <text x="90" y="410" fill="#1f2328" font-size="11" font-family="ui-monospace, Menlo, monospace">/data</text>
+      <text x="135" y="410" fill="#656d76" font-size="11">— ext4, writable persistent (logs, config, OTA staging)</text>
+
+      <circle cx="75" cy="430" r="5" fill="#ffebe9" stroke="#ff8182" stroke-width="1.5"/>
+      <text x="90" y="435" fill="#1f2328" font-size="11" font-family="ui-monospace, Menlo, monospace">/boot</text>
+      <text x="135" y="435" fill="#656d76" font-size="11">— vfat, bootloader files (kernel, device tree)</text>
     </svg>
+    <div class="svg-caption">Single unified directory tree — different filesystems mounted at different points</div>
   </div>
 
-  <!-- 3. 7 FILE TYPES -->
   <h2>3 — The 7 File Types (Everything Is a File)</h2>
   <table>
     <tr><th>Symbol</th><th>Type</th><th>ls output</th><th>ECU Example</th><th>SELinux Class</th></tr>
@@ -207,62 +269,73 @@
     <tr><td><code>s</code></td><td>Unix domain socket</td><td><code>srw-r--r--</code></td><td><code>/run/ota.sock</code></td><td><code>sock_file</code></td></tr>
   </table>
 
-  <p>SELinux knows about all 7 types. Each has its own <span class="highlight">object class</span> in policy — this lets you write rules that specifically allow reading <em>character devices</em> but not <em>block devices</em>, for example.</p>
+  <p>SELinux knows about all 7 types. Each has its own <strong>object class</strong> in policy — this lets you write rules that specifically allow reading <em>character devices</em> but not <em>block devices</em>, for example.</p>
 
-  <!-- 4. INODES -->
   <h2>4 — Inodes: The File's Hidden Identity Card</h2>
-  <p>Every file on disk has an <span class="highlight">inode</span> (index node). The inode is a data structure inside the filesystem that stores everything about the file <em>except its name and content</em>: ownership, permissions, timestamps, size, and — crucially for SELinux — the location of any extended attributes.</p>
+  <p>Every file on disk has an <strong>inode</strong> (index node). The inode is a data structure inside the filesystem that stores everything about the file <em>except its name and content</em>: ownership, permissions, timestamps, size, and — crucially for SELinux — the location of any extended attributes.</p>
 
   <div class="analogy">
-    Think of a library. The book (file content) sits on a shelf. The library catalogue card (inode) records who wrote it, when it was filed, how thick it is, and which shelf slot it's in. The catalogue card also has a sticky note stapled to it (xattr) that reads "SELinux label: ota_config_t". The title on the spine (file name) is just in the directory — it points to the catalogue card number (inode number).
+    <span class="analogy-label">💡 Analogy</span>
+    Think of a library. The book (file content) sits on a shelf. The library catalogue card (inode) records who wrote it, when it was filed, how thick it is, and which shelf slot it's in. The catalogue card also has a sticky note stapled to it (xattr) that reads <em>"SELinux label: ota_config_t"</em>. The title on the spine (file name) is just in the directory — it points to the catalogue card number (inode number).
   </div>
 
   <div class="svg-wrap">
-    <svg viewBox="0 0 760 200" xmlns="http://www.w3.org/2000/svg" style="width:100%;max-width:760px">
-      <rect width="760" height="200" fill="#0d1117" rx="8"/>
-      <!-- directory entry -->
-      <rect x="20" y="30" width="180" height="140" fill="#1c3a5e" stroke="#58a6ff" rx="5"/>
-      <text x="110" y="50" fill="#58a6ff" font-size="11" text-anchor="middle" font-family="monospace" font-weight="bold">Directory Entry</text>
-      <text x="110" y="70" fill="#8b949e" font-size="10" text-anchor="middle" font-family="monospace">/etc/ota/</text>
-      <text x="40" y="95" fill="#e6edf3" font-size="10" font-family="monospace">config.json → 4721</text>
-      <text x="40" y="113" fill="#e6edf3" font-size="10" font-family="monospace">private.key → 4722</text>
-      <text x="40" y="131" fill="#e6edf3" font-size="10" font-family="monospace">manifest → 4723</text>
-      <!-- arrow -->
-      <line x1="200" y1="95" x2="250" y2="95" stroke="#58a6ff" stroke-width="1.5" marker-end="url(#iarr)"/>
+    <svg viewBox="0 0 820 240" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="Inode structure with xattr">
       <defs>
-        <marker id="iarr" markerWidth="8" markerHeight="8" refX="6" refY="3" orient="auto">
-          <path d="M0,0 L0,6 L8,3 z" fill="#58a6ff"/>
+        <marker id="iarr1" markerWidth="10" markerHeight="10" refX="8" refY="4" orient="auto">
+          <path d="M0,0 L0,8 L10,4 z" fill="#0969da"/>
+        </marker>
+        <marker id="iarr2" markerWidth="10" markerHeight="10" refX="8" refY="4" orient="auto">
+          <path d="M0,0 L0,8 L10,4 z" fill="#9a6700"/>
         </marker>
       </defs>
-      <!-- inode -->
-      <rect x="250" y="30" width="200" height="140" fill="#1a2d1a" stroke="#3fb950" rx="5"/>
-      <text x="350" y="50" fill="#3fb950" font-size="11" text-anchor="middle" font-family="monospace" font-weight="bold">Inode #4721</text>
-      <text x="260" y="70" fill="#e6edf3" font-size="10" font-family="monospace">uid: 1001 (ota_user)</text>
-      <text x="260" y="87" fill="#e6edf3" font-size="10" font-family="monospace">gid: 1001 (ota_group)</text>
-      <text x="260" y="104" fill="#e6edf3" font-size="10" font-family="monospace">mode: 0640</text>
-      <text x="260" y="121" fill="#e6edf3" font-size="10" font-family="monospace">size: 2048 bytes</text>
-      <text x="260" y="138" fill="#e6edf3" font-size="10" font-family="monospace">xattr ptr →</text>
-      <!-- arrow to xattr -->
-      <line x1="450" y1="95" x2="500" y2="95" stroke="#d29922" stroke-width="1.5" marker-end="url(#xarr)"/>
-      <defs>
-        <marker id="xarr" markerWidth="8" markerHeight="8" refX="6" refY="3" orient="auto">
-          <path d="M0,0 L0,6 L8,3 z" fill="#d29922"/>
-        </marker>
-      </defs>
-      <!-- xattr -->
-      <rect x="500" y="55" width="240" height="80" fill="#2d2a1a" stroke="#d29922" rx="5"/>
-      <text x="620" y="75" fill="#d29922" font-size="11" text-anchor="middle" font-family="monospace" font-weight="bold">Extended Attributes (xattr)</text>
-      <text x="510" y="98" fill="#e6edf3" font-size="10" font-family="monospace">security.selinux =</text>
-      <text x="510" y="115" fill="#3fb950" font-size="10" font-family="monospace">  system_u:object_r:ota_config_t:s0</text>
-      <!-- data block arrow -->
-      <line x1="350" y1="170" x2="350" y2="190" stroke="#30363d" stroke-width="1"/>
-      <text x="350" y="185" fill="#8b949e" font-size="9" text-anchor="middle" font-family="monospace">(data blocks — actual file content)</text>
+
+      <!-- Directory entry -->
+      <rect x="20" y="35" width="220" height="170" fill="#ddf4ff" stroke="#54aeff" stroke-width="1.5" rx="8"/>
+      <text x="130" y="58" fill="#0969da" font-size="12" text-anchor="middle" font-weight="700">Directory Entry</text>
+      <text x="130" y="76" fill="#656d76" font-size="10.5" text-anchor="middle" font-family="ui-monospace, Menlo, monospace">/etc/ota/</text>
+      <line x1="35" y1="86" x2="225" y2="86" stroke="#54aeff" stroke-width="1"/>
+      <text x="35" y="108" fill="#1f2328" font-size="11" font-family="ui-monospace, Menlo, monospace">config.json   → 4721</text>
+      <text x="35" y="132" fill="#1f2328" font-size="11" font-family="ui-monospace, Menlo, monospace">private.key   → 4722</text>
+      <text x="35" y="156" fill="#1f2328" font-size="11" font-family="ui-monospace, Menlo, monospace">manifest      → 4723</text>
+      <text x="35" y="186" fill="#656d76" font-size="10" font-style="italic">name → inode number</text>
+
+      <!-- Arrow to inode -->
+      <line x1="240" y1="108" x2="285" y2="108" stroke="#0969da" stroke-width="1.5" marker-end="url(#iarr1)"/>
+
+      <!-- Inode -->
+      <rect x="290" y="35" width="240" height="170" fill="#dafbe1" stroke="#4ac26b" stroke-width="1.5" rx="8"/>
+      <text x="410" y="58" fill="#1a7f37" font-size="12" text-anchor="middle" font-weight="700">Inode #4721</text>
+      <line x1="305" y1="68" x2="515" y2="68" stroke="#4ac26b" stroke-width="1"/>
+      <text x="305" y="88" fill="#1f2328" font-size="11" font-family="ui-monospace, Menlo, monospace">uid:   1001 (ota_user)</text>
+      <text x="305" y="108" fill="#1f2328" font-size="11" font-family="ui-monospace, Menlo, monospace">gid:   1001 (ota_group)</text>
+      <text x="305" y="128" fill="#1f2328" font-size="11" font-family="ui-monospace, Menlo, monospace">mode:  0640</text>
+      <text x="305" y="148" fill="#1f2328" font-size="11" font-family="ui-monospace, Menlo, monospace">size:  2048 bytes</text>
+      <text x="305" y="168" fill="#1f2328" font-size="11" font-family="ui-monospace, Menlo, monospace">mtime: 2026-05-12</text>
+      <text x="305" y="190" fill="#9a6700" font-size="11" font-family="ui-monospace, Menlo, monospace" font-weight="600">xattr ptr →</text>
+
+      <!-- Arrow to xattr -->
+      <line x1="530" y1="186" x2="575" y2="142" stroke="#9a6700" stroke-width="1.5" marker-end="url(#iarr2)"/>
+
+      <!-- xattr box -->
+      <rect x="580" y="80" width="220" height="120" fill="#fff8c5" stroke="#d4a72c" stroke-width="1.5" rx="8"/>
+      <text x="690" y="103" fill="#9a6700" font-size="12" text-anchor="middle" font-weight="700">Extended Attributes</text>
+      <line x1="595" y1="113" x2="785" y2="113" stroke="#d4a72c" stroke-width="1"/>
+      <text x="595" y="135" fill="#1f2328" font-size="11" font-family="ui-monospace, Menlo, monospace">security.selinux =</text>
+      <text x="595" y="158" fill="#1a7f37" font-size="10.5" font-family="ui-monospace, Menlo, monospace">  system_u:object_r:</text>
+      <text x="595" y="178" fill="#1a7f37" font-size="10.5" font-family="ui-monospace, Menlo, monospace">  ota_config_t:s0</text>
+
+      <!-- Title -->
+      <text x="410" y="22" fill="#1f2328" font-size="13" text-anchor="middle" font-weight="700">How a file finds its SELinux label</text>
+
+      <!-- Footer -->
+      <text x="410" y="228" fill="#656d76" font-size="10.5" text-anchor="middle" font-style="italic">The directory holds the name → inode mapping. The inode holds metadata + pointer to xattrs. The xattr holds the SELinux label.</text>
     </svg>
+    <div class="svg-caption">File name, inode metadata, and SELinux label are stored separately</div>
   </div>
 
-  <!-- 5. XATTRS + SELINUX -->
   <h2>5 — Extended Attributes (xattrs): Where SELinux Labels Live</h2>
-  <p>An <span class="highlight">extended attribute (xattr)</span> is a key-value pair stored alongside the inode. SELinux uses the xattr named <code>security.selinux</code> to store the security context of every file. The value is a string like:</p>
+  <p>An <strong>extended attribute (xattr)</strong> is a key-value pair stored alongside the inode. SELinux uses the xattr named <code>security.selinux</code> to store the security context of every file. The value is a string like:</p>
 
   <div class="xattr-row">
     <span class="xattr-key">security.selinux</span>
@@ -278,7 +351,7 @@
   </div>
 
   <p>You can read and set xattrs with these commands:</p>
-  <pre><code># Read the SELinux label of a file
+<pre><code># Read the SELinux label of a file
 getfattr -n security.selinux /etc/ota/config.json
 # or simpler:
 ls -Z /etc/ota/config.json
@@ -286,34 +359,33 @@ ls -Z /etc/ota/config.json
 # Restore a label to its policy-defined value
 restorecon /etc/ota/config.json
 
-# Set a label manually (rarely needed, use restorecon instead)
+# Set a label manually (rarely needed — prefer restorecon)
 chcon -t ota_config_t /etc/ota/config.json</code></pre>
 
-  <!-- 6. SQUASHFS -->
   <h2>6 — squashfs: The Read-Only Rootfs on ECUs</h2>
-  <p>An automotive ECU rootfs is almost always a <span class="highlight">squashfs</span> image — a compressed, read-only filesystem. It is baked at build time, signed, and stored in a flash partition. The kernel mounts it at <code>/</code> on boot.</p>
+  <p>An automotive ECU rootfs is almost always a <strong>squashfs</strong> image — a compressed, read-only filesystem. It is baked at build time, signed, and stored in a flash partition. The kernel mounts it at <code>/</code> on boot.</p>
 
   <div class="analogy">
+    <span class="analogy-label">💡 Analogy</span>
     squashfs is like a sealed, vacuum-packed box of meals that was packed in a factory and shrink-wrapped. You can open the box and eat (read files), but you cannot add, remove, or modify anything inside — it's factory-sealed. The seal is also tamper-evident: if the firmware validation fails, the bootloader refuses to load it. On an OTA update, the factory prepares a completely new box, validates it, and swaps it in at the next boot.
   </div>
 
   <table>
     <tr><th>Property</th><th>squashfs Behaviour</th><th>SELinux Implication</th></tr>
     <tr><td>Read-only</td><td>Cannot write to rootfs at runtime</td><td>SELinux labels embedded in image; never drift</td></tr>
-    <tr><td>Compressed</td><td>Smaller flash footprint (~50% ratio)</td><td>Labels are compressed too; no overhead</td></tr>
+    <tr><td>Compressed</td><td>Smaller flash footprint (~50% ratio)</td><td>Labels compressed too; no overhead</td></tr>
     <tr><td>Built at image creation</td><td>Labels set by <code>setfattr</code> during build</td><td>Guarantees label integrity from factory</td></tr>
     <tr><td>Signed</td><td>Signature verified by bootloader / dm-verity</td><td>Attacker cannot relabel files offline</td></tr>
-    <tr><td>Not writable</td><td>Runtime writes go to overlay or tmpfs</td><td>New files on tmpfs get label from policy/genfscon</td></tr>
+    <tr><td>Not writable</td><td>Runtime writes go to overlay or tmpfs</td><td>New files on tmpfs get label from policy / genfscon</td></tr>
   </table>
 
-  <!-- 7. VIRTUAL FILESYSTEMS -->
   <h2>7 — Virtual Filesystems: /proc, /sys, /dev</h2>
-  <p>These three directories do not correspond to any physical storage. They are <span class="highlight">virtual filesystems</span> maintained by the kernel entirely in RAM. Every file inside them represents live kernel state.</p>
+  <p>These three directories do not correspond to any physical storage. They are <strong>virtual filesystems</strong> maintained by the kernel entirely in RAM. Every file inside them represents live kernel state.</p>
 
   <div class="tabs" id="tabs-vfs">
-    <button class="tab-btn active" onclick="switchTab('vfs','proc')">procfs (/proc)</button>
-    <button class="tab-btn" onclick="switchTab('vfs','sys')">sysfs (/sys)</button>
-    <button class="tab-btn" onclick="switchTab('vfs','dev')">devtmpfs (/dev)</button>
+    <button class="tab-btn active" onclick="switchTab(event,'vfs','proc')">procfs (/proc)</button>
+    <button class="tab-btn" onclick="switchTab(event,'vfs','sys')">sysfs (/sys)</button>
+    <button class="tab-btn" onclick="switchTab(event,'vfs','dev')">devtmpfs (/dev)</button>
   </div>
   <div class="tab-panel active" id="vfs-proc">
     <p><code>/proc</code> is a window into the running kernel and every process. It has no files on disk — the kernel generates the content on demand when you <code>read()</code> it.</p>
@@ -350,32 +422,29 @@ chcon -t ota_config_t /etc/ota/config.json</code></pre>
     </table>
   </div>
 
-  <!-- 8. UNLABELED_T -->
   <h2>8 — unlabeled_t: What Happens Without a Label</h2>
-  <p>When SELinux encounters a file with no <code>security.selinux</code> xattr (or a filesystem that doesn't support xattrs), it assigns the type <code>unlabeled_t</code>. Policy almost never allows processes to access <code>unlabeled_t</code> files, so this effectively <span class="highlight">blocks access to any unlabeled resource</span>.</p>
+  <p>When SELinux encounters a file with no <code>security.selinux</code> xattr (or a filesystem that doesn't support xattrs), it assigns the type <code>unlabeled_t</code>. Policy almost never allows processes to access <code>unlabeled_t</code> files, so this effectively <strong>blocks access to any unlabeled resource</strong>.</p>
   <div class="card orange">
     <h3>ECU Scenario: unlabeled_t as a Safety Net</h3>
-    <p>An attacker manages to inject a file into the ECU's writable <code>/data</code> partition without setting a proper SELinux label (perhaps via a partially-exploited file write vulnerability). The file gets <code>unlabeled_t</code>. The OTA daemon, CAN gateway, and diagnostics server — none of them have policy rules to access <code>unlabeled_t</code>. The injected file is harmless: even if the attacker can create it, no ECU service will execute or read it.</p>
+    <p style="margin-bottom:0">An attacker manages to inject a file into the ECU's writable <code>/data</code> partition without setting a proper SELinux label (perhaps via a partially-exploited file write vulnerability). The file gets <code>unlabeled_t</code>. The OTA daemon, CAN gateway, and diagnostics server — none of them have policy rules to access <code>unlabeled_t</code>. The injected file is harmless: even if the attacker can create it, no ECU service will execute or read it.</p>
   </div>
 
-  <!-- 9. GENFSCON -->
   <h2>9 — genfscon: Labeling Virtual Filesystems</h2>
-  <p>Since virtual filesystems like <code>/proc</code> and <code>/sys</code> don't have inodes with xattrs, SELinux labels them using <span class="highlight">genfscon</span> rules in policy. A genfscon rule maps a filesystem type + path prefix to a security context.</p>
-  <pre><code># In CIL policy — label /proc entries
+  <p>Since virtual filesystems like <code>/proc</code> and <code>/sys</code> don't have inodes with xattrs, SELinux labels them using <strong>genfscon</strong> rules in policy. A genfscon rule maps a filesystem type + path prefix to a security context.</p>
+<pre><code>; In CIL policy — label /proc entries
 (genfscon "proc" "/"           (system_u object_r proc_t s0))
 (genfscon "proc" "/net"        (system_u object_r proc_net_t s0))
 (genfscon "proc" "/sys/kernel" (system_u object_r proc_kcore_t s0))
 
-# Label sysfs SELinux interface
+; Label sysfs SELinux interface
 (genfscon "sysfs" "/kernel/security/selinux"
                                (system_u object_r security_t s0))
 
-# Label CAN devices under /dev
+; Label CAN devices under /dev
 (genfscon "devtmpfs" "/can"    (system_u object_r can_device_t s0))</code></pre>
 
   <p>genfscon rules are evaluated every time the kernel looks up a label for a virtual file. They require no on-disk xattr storage — the label is computed from the path at lookup time.</p>
 
-  <!-- 10. ATTACK SCENARIO -->
   <h2>10 — Attack Scenario: Rootfs Tampering &amp; Label Forgery</h2>
   <div class="card red">
     <h3>Scenario: Attacker tries to plant a backdoor binary in the ECU rootfs</h3>
@@ -383,56 +452,55 @@ chcon -t ota_config_t /etc/ota/config.json</code></pre>
 
   <div class="attack-step attacker">
     <span class="step-num">1</span>
-    <div>
-      <strong>Offline rootfs extraction</strong><br>
+    <div class="step-body">
+      <strong>Offline rootfs extraction</strong>
       Attacker extracts the firmware binary from a stolen ECU using JTAG or SPI flash dumping. They unsquash the rootfs, add a backdoor binary, and re-squash it.
     </div>
   </div>
   <div class="attack-step selinux">
     <span class="step-num">2</span>
-    <div>
-      <strong>dm-verity / Secure Boot blocks loading</strong><br>
+    <div class="step-body">
+      <strong>dm-verity / Secure Boot blocks loading</strong>
       The bootloader (U-Boot with FIT image verification) checks the squashfs signature. The tampered image signature doesn't match. Boot is aborted. The attacker's rootfs is never mounted.
     </div>
   </div>
   <div class="attack-step attacker">
     <span class="step-num">3</span>
-    <div>
-      <strong>Runtime write attempt (via exploited daemon)</strong><br>
+    <div class="step-body">
+      <strong>Runtime write attempt (via exploited daemon)</strong>
       Attacker instead exploits a running daemon to try to write a new binary to <code>/tmp/backdoor</code>.
     </div>
   </div>
   <div class="attack-step selinux">
     <span class="step-num">4</span>
-    <div>
-      <strong>SELinux blocks exec on tmpfs binary</strong><br>
-      Even if the write to <code>/tmp</code> succeeds (tmpfs is writable), <code>/tmp</code> files get label <code>tmp_t</code>. No domain has policy to <code>execute</code> a <code>tmp_t</code> file on this ECU. <code>execve()</code> is blocked. AVC denial logged.
+    <div class="step-body">
+      <strong>SELinux blocks exec on tmpfs binary</strong>
+      Even if the write to <code>/tmp</code> succeeds (tmpfs is writable), files there get label <code>tmp_t</code>. No domain has policy to <code>execute</code> a <code>tmp_t</code> file on this ECU. <code>execve()</code> is blocked. AVC denial logged.
     </div>
   </div>
   <div class="attack-step selinux">
     <span class="step-num">5</span>
-    <div>
-      <strong>No label → unlabeled_t → no access</strong><br>
+    <div class="step-body">
+      <strong>No label → unlabeled_t → no access</strong>
       Even if the attacker writes a file without an xattr, it gets <code>unlabeled_t</code>. No domain has access to <code>unlabeled_t</code>. The file exists but is unreachable.
     </div>
   </div>
 
-  <!-- 11. INTRUSION DETECTION -->
   <h2>11 — Intrusion Detection &amp; Forensics</h2>
   <div class="tabs" id="tabs-idf">
-    <button class="tab-btn active" onclick="switchTab('idf','detect')">Detection</button>
-    <button class="tab-btn" onclick="switchTab('idf','forensics')">Forensics</button>
+    <button class="tab-btn active" onclick="switchTab(event,'idf','detect')">Detection</button>
+    <button class="tab-btn" onclick="switchTab(event,'idf','forensics')">Forensics</button>
   </div>
   <div class="tab-panel active" id="idf-detect">
     <ul style="margin-left:1.5rem">
       <li>AVC denials for <code>tcontext=unlabeled_t</code> — file planted without proper label</li>
       <li>AVC denials on <code>execve</code> from <code>tmp_t</code> or <code>var_t</code> — execution attempt from writable area</li>
       <li>AVC denials accessing <code>/dev/mmcblk0</code> directly — trying to write raw flash</li>
-      <li>Repeated <code>getfattr</code> (xattr reads) on key files — label reconnaissance</li>
+      <li>Repeated <code>getfattr</code> calls on key files — label reconnaissance</li>
     </ul>
   </div>
   <div class="tab-panel" id="idf-forensics">
-    <p>After incident:</p>
+    <p>After an incident:</p>
     <ul style="margin-left:1.5rem">
       <li><code>find /data -xattr security.selinux -name "unlabeled_t"</code> — find unlabeled files (planted without proper label)</li>
       <li>Compare squashfs hash against build server hash — detect offline tampering</li>
@@ -441,7 +509,6 @@ chcon -t ota_config_t /etc/ota/config.json</code></pre>
     </ul>
   </div>
 
-  <!-- 12. KEY TERMS -->
   <h2>12 — Key Terms</h2>
   <table>
     <tr><th>Term</th><th>Plain Language Definition</th><th>ECU Relevance</th></tr>
@@ -457,7 +524,6 @@ chcon -t ota_config_t /etc/ota/config.json</code></pre>
     <tr><td><strong>devtmpfs</strong></td><td>Virtual fs the kernel maintains for device nodes</td><td><code>/dev/can0</code>, <code>/dev/tpm0</code></td></tr>
   </table>
 
-  <!-- SUMMARY -->
   <h2>13 — Summary</h2>
   <div class="summary-grid">
     <div class="summary-card">
@@ -492,21 +558,20 @@ chcon -t ota_config_t /etc/ota/config.json</code></pre>
     </div>
   </div>
 
-  <!-- NAV -->
   <div class="nav-footer">
-    <a href="0-1-how-linux-works.html"><button class="nav-btn">← 0.1 How Linux Works</button></a>
-    <span style="color:var(--muted); font-size:.9rem">Module 0.2 of 73</span>
-    <a href="0-3-users-groups-dac.html"><button class="nav-btn">Next: 0.3 Users &amp; DAC →</button></a>
+    <a href="0-1-how-linux-works.html" class="nav-btn">← 0.1 How Linux Works</a>
+    <span class="nav-meta">Module 0.2 of 73</span>
+    <a href="0-3-users-groups-dac.html" class="nav-btn">Next: 0.3 Users &amp; DAC →</a>
   </div>
 </main>
 </div>
 
 <script>
-function switchTab(group, id) {
+function switchTab(ev, group, id) {
   document.querySelectorAll('[id^="' + group + '-"]').forEach(p => p.classList.remove('active'));
   document.querySelectorAll('#tabs-' + group + ' .tab-btn').forEach(b => b.classList.remove('active'));
   document.getElementById(group + '-' + id).classList.add('active');
-  event.target.classList.add('active');
+  ev.currentTarget.classList.add('active');
 }
 </script>
 </body>
